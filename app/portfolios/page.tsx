@@ -3,7 +3,7 @@ import Footer from '@/components/footer';
 import Nav from '@/components/nav';
 import Preview from '@/components/preview';
 import { SlidersHorizontal } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 type Filter = {
   title: string;
@@ -63,11 +63,51 @@ const filters = [
 
 const page = () => {
   const [filter, setFilter] = useState<Filters>(filters);
+  const [isIntersecting, setIsIntersecting] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (filter) {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
+      },
+      { rootMargin: '-50px' }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
     }
-  }, [filter]);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (isIntersecting) {
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2500);
+    }
+  }, [isIntersecting]);
+
+  function handleFilter(selectedTitle: string, selectedType: string) {
+    setFilter([
+      ...filter.map((item) => {
+        let active = item.active;
+        if (item.title === selectedTitle) {
+          active = !item.active;
+        } else if (item.title !== selectedTitle && item.type === selectedType) {
+          active = false;
+        }
+        return {
+          ...item,
+          active,
+        };
+      }),
+    ]);
+  }
+
   return (
     <>
       <Nav />
@@ -83,11 +123,15 @@ const page = () => {
             <section className='flex flex-row flex-wrap items-center gap-[13px]'>
               {filter.map((filter: Filter, index: number) =>
                 filter.type === 'seperator' ? (
-                  <div className='bg-unactive h-[40px] w-[2px]'></div>
+                  <div
+                    className='h-[40px] w-[2px] bg-unactive'
+                    key={index}
+                  ></div>
                 ) : (
                   <button
                     className={` rounded-[8px] px-[20px] py-[11px] text-important transition-all hover:bg-cta hover:text-white ${filter.active ? 'bg-cta text-white' : 'bg-unactive text-important'}`}
                     key={index}
+                    onClick={() => handleFilter(filter.title, filter.type)}
                   >
                     {filter.title}
                   </button>
@@ -103,8 +147,11 @@ const page = () => {
             <Preview />
             <Preview />
           </div>
-          <div className='bg-unactive my-[200px] rounded-[20px] py-[36px] text-center text-[18px] text-important'>
-            Load More
+          <div
+            ref={ref}
+            className='my-[200px] rounded-[20px] bg-unactive py-[36px] text-center text-[18px] text-important'
+          >
+            {loading ? 'Loading' : 'Load More'}
           </div>
         </section>
       </main>
