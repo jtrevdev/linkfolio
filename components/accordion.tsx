@@ -56,18 +56,29 @@ const Accordion = ({ items, keepOthersOpen }: AccordionProps) => {
   }
 
   return (
-    <div>
+    <div className='flex flex-col gap-[18px]'>
       {accordionItems?.map((listItem, index) => {
         return (
-          <div className={`${listItem.toggled ? '' : ''}`} key={index}>
+          <div
+            className={`rounded-[20px] border border-border bg-white p-4 ${listItem.toggled ? '' : ''}`}
+            key={index}
+          >
             <button
-              className='toggle'
+              className='toggle flex w-full justify-between px-[12px] py-[11px] pb-[16px]'
               onClick={() => handleAccordionToggle(listItem)}
             >
-              <p>{listItem.label}</p>
+              <p className='font-medium'>{listItem.label}</p>
               <div>{listItem.toggled ? '-' : '+'}</div>
             </button>
-            <div>{listItem.renderContent}</div>
+            <div
+              className={`max-h-0 overflow-hidden transition-all ease-out ${listItem.toggled ? 'max-h-[500px] transition-all ease-out' : 'max-h-0 transition-all ease-out'}`}
+            >
+              <div
+                className={`pt-[18px] ${listItem.toggled ? 'border-t' : 'border-t-0'}`}
+              >
+                {listItem.renderContent}
+              </div>
+            </div>
           </div>
         );
       })}

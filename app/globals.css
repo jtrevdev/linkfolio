@@ -7,11 +7,13 @@ body {
 }
 
 main {
-  @apply third:mx-[80px] mx-[20px];
+  @apply mx-[20px] third:mx-[80px];
 }
-nav {
-  @apply mx-[0px] px-[80px];
+nav,
+footer {
+  @apply mx-[0px] px-[20px] third:px-[80px];
 }
+
 h1.title {
   @apply inline-block bg-gradient-to-r from-[color:#5863F8] via-[color:#000B18] to-[color:#5863F8] bg-clip-text text-[41px] font-semibold text-transparent;
 }

@@ -14,6 +14,7 @@ const config: Config = {
         general: '#434847',
         unimportant: '#B5B5B5',
         border: '#E9E9E9',
+        unactive: '#F4F4F4',
       },
       screens: {
         first: '1430px',

@@ -1,4 +1,5 @@
 import Accordion from '@/components/accordion';
+import Footer from '@/components/footer';
 import Nav from '@/components/nav';
 import Preview from '@/components/preview';
 import Image from 'next/image';
@@ -6,6 +7,32 @@ import Link from 'next/link';
 const questions = [
   {
     id: 1,
+    label: 'What is the purpose of Linkfolio?',
+    renderContent: (
+      <p>
+        Linkfolio was created to ultimately give users straight-forward
+        inspiration with real-world portfolios. It’s common that upon searching
+        for portfolios you will be met with the same portfolios that have become
+        popular within the space. Linkfolio allows the user to reach unique
+        designs they have never seen before.
+      </p>
+    ),
+  },
+  {
+    id: 2,
+    label: 'What is the purpose of Linkfolio?',
+    renderContent: (
+      <p>
+        Linkfolio was created to ultimately give users straight-forward
+        inspiration with real-world portfolios. It’s common that upon searching
+        for portfolios you will be met with the same portfolios that have become
+        popular within the space. Linkfolio allows the user to reach unique
+        designs they have never seen before.
+      </p>
+    ),
+  },
+  {
+    id: 3,
     label: 'What is the purpose of Linkfolio?',
     renderContent: (
       <p>
@@ -38,7 +65,7 @@ export default function Home() {
               view all
             </Link>
           </section>
-          <section className='second:grid-cols-2 mt-[18px] grid grid-cols-1 gap-[20px] first:grid-cols-3'>
+          <section className='mt-[18px] grid grid-cols-1 gap-[20px] second:grid-cols-2 first:grid-cols-3'>
             <Preview />
             <Preview />
             <Preview />
@@ -53,8 +80,8 @@ export default function Home() {
               view all
             </Link> */}
           </section>
-          <section className='second:grid-cols-2 mt-[18px] grid grid-cols-1 grid-rows-2 gap-[20px]'>
-            <div className='border-border row-span-2 h-full rounded-[20px] border bg-white px-[17px] py-[20px]'>
+          <section className='mt-[18px] grid grid-cols-1 grid-rows-2 gap-[20px] second:grid-cols-2'>
+            <div className='row-span-2 h-full rounded-[20px] border border-border bg-white px-[17px] py-[20px]'>
               <h2>Exposure</h2>
               <p className='text-general'>
                 Kick start your career by pushing your name through your
@@ -68,7 +95,7 @@ export default function Home() {
                 alt=''
               />
             </div>
-            <div className='border-border flex rounded-[20px] border bg-white px-[17px] py-[20px]'>
+            <div className='flex rounded-[20px] border border-border bg-white px-[17px] py-[20px]'>
               <section className=''>
                 <h2>Inspiration</h2>
                 <p className='text-general'>
@@ -84,7 +111,7 @@ export default function Home() {
                 alt=''
               />
             </div>
-            <div className='border-border flex rounded-[20px] border bg-white px-[17px] py-[20px]'>
+            <div className='flex rounded-[20px] border border-border bg-white px-[17px] py-[20px]'>
               <section className=''>
                 <h2>Community</h2>
                 <p className='text-general'>
@@ -111,10 +138,30 @@ export default function Home() {
             </Link> */}
           </section>
           <section className='mt-[18px]'>
-            <Accordion items={questions} keepOthersOpen={true} />
+            <Accordion items={questions} keepOthersOpen={false} />
+          </section>
+        </div>
+        <div className='mx-auto flex max-w-[1278px] flex-col gap-[20px] pb-[370px] second:flex-row second:items-center second:justify-between'>
+          <section>
+            <h2 className='font-semibold text-important'>
+              Join our newsletter
+            </h2>
+            <p className='text-general'>
+              Stay up to date as we push out new features
+            </p>
+          </section>
+          <section className='flex justify-between gap-[25px]'>
+            <input
+              placeholder='Your Email Address'
+              className='w-full rounded-[20px] border border-border bg-white px-[19px] py-[13px] placeholder:text-unimportant second:w-[458px]'
+            />
+            <button className='rounded-[20px] bg-cta px-[44px] py-[12px] text-white'>
+              Submit
+            </button>
           </section>
         </div>
       </main>
+      <Footer />
     </>
   );
 }

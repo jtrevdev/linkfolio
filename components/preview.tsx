@@ -1,9 +1,13 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import React from 'react';
 
 const Preview = () => {
   return (
-    <div className='border-border second:min-h-[390px]  flex  flex-col justify-between rounded-[20px] border'>
+    <Link
+      href='/'
+      className='flex flex-col justify-between rounded-[20px]  border border-border hover:shadow-md second:min-h-[390px]'
+    >
       <Image
         className='w-full rounded-[8px] object-cover p-[17px]'
         src='/images/portfolio.png'
@@ -24,7 +28,7 @@ const Preview = () => {
           <p className='font-light text-general'>Front End Developer</p>
         </section>
       </section>
-    </div>
+    </Link>
   );
 };
 
