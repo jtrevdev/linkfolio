@@ -1,11 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
+import Profile from './profile';
 
 const Preview = () => {
   return (
     <Link
-      href='/'
+      href='/portfolios/aed'
       className='flex flex-col justify-between rounded-[20px]  border border-border hover:shadow-md second:min-h-[390px]'
     >
       <Image
@@ -15,19 +16,7 @@ const Preview = () => {
         height={210}
         alt=''
       />
-      <section className='flex items-end gap-[10px] px-[17px] py-[23px]'>
-        <Image
-          className=''
-          src='/images/face.png'
-          width={68}
-          height={68}
-          alt=''
-        />
-        <section className='pb-[7px]'>
-          <p className='font-semibold text-important'>Jonathan Trevino</p>
-          <p className='font-light text-general'>Front End Developer</p>
-        </section>
-      </section>
+      <Profile />
     </Link>
   );
 };
