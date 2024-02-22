@@ -3,6 +3,7 @@ import Link from 'next/link';
 import React from 'react';
 import Logo from '@/public/icons/logo.svg';
 const Nav = () => {
+  // testing
   return (
     <nav className='flex items-center justify-between bg-white py-[22px] drop-shadow-md'>
       <Link href='/' className='flex w-fit items-center gap-[15px]'>
