@@ -1,5 +1,6 @@
 'use client';
 import Footer from '@/components/footer';
+import Modal from '@/components/modal';
 import Nav from '@/components/nav';
 import Preview from '@/components/preview';
 import { SlidersHorizontal } from 'lucide-react';
@@ -110,6 +111,8 @@ const page = () => {
 
   return (
     <>
+      <Modal />
+
       <Nav />
       <main className=''>
         <section className='mx-auto max-w-[1278px] pt-[109px]'>

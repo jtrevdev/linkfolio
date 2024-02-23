@@ -1,5 +1,6 @@
 import Accordion from '@/components/accordion';
 import Footer from '@/components/footer';
+import Modal from '@/components/modal';
 import Nav from '@/components/nav';
 import Preview from '@/components/preview';
 import Image from 'next/image';
@@ -49,6 +50,7 @@ const questions = [
 export default function Home() {
   return (
     <>
+      <Modal />
       <Nav />
       <main className=''>
         <header className='flex flex-col items-center space-y-[10px] pb-[150px] pt-[109px]'>
