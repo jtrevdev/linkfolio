@@ -16,7 +16,11 @@ const Preview = () => {
         height={210}
         alt=''
       />
-      <Profile />
+      <Profile
+        photoURL={'/images/default.png'}
+        displayName={'Default Name'}
+        title={'Default'}
+      />
     </Link>
   );
 };

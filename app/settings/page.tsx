@@ -55,7 +55,11 @@ const page = () => {
         <main>
           <section className='mx-auto mb-[200px] mt-[109px] max-w-[1278px] space-y-[20px]'>
             <section className='flex w-full items-center justify-between rounded-[8px] border border-border bg-white'>
-              <Profile />
+              <Profile
+                photoURL={user.photoURL ? user.photoURL : ''}
+                displayName={user?.displayName ? user.displayName : ''}
+                title={userData?.title ? userData.title : ''}
+              />
               <Edit2 size={28} className='mx-[17px]' />
             </section>
             <section className='w-full rounded-[8px] border border-border bg-white  px-[20px] py-[31px]'>
