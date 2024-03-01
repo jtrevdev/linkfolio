@@ -38,7 +38,7 @@ const Nav = () => {
               <Bell />
             </button>
             {userNotif && (
-              <div className='scrollable-content scroll absolute right-0 top-9 flex h-[280px] w-[314px] flex-col gap-[5px] overflow-y-scroll rounded-[8px] border border-border bg-white'>
+              <div className='scrollable-content scroll absolute right-0 top-9 flex h-[280px] w-[334px] flex-col gap-[5px] overflow-y-scroll rounded-[8px] border border-border bg-white'>
                 <section className='border-b '>
                   <span className='flex justify-between px-[20px] pb-[8px] pt-[18px]'>
                     <h3 className='text-[14px] font-semibold text-important'>
