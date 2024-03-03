@@ -4,11 +4,22 @@ import Nav from '@/components/nav';
 import Profile from '@/components/profile';
 import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, firestore } from '../firebase/config';
+import { auth, firestore, storage } from '@/app/firebase/config';
 import Authenticate from '@/components/authenticate';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { UserData } from '@/types';
 import { Edit, Edit2, Edit3, X } from 'lucide-react';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import {
+  getDownloadURL,
+  ref,
+  updateMetadata,
+  uploadBytes,
+  uploadBytesResumable,
+  uploadString,
+} from 'firebase/storage';
+import puppeteer from 'puppeteer';
+import { portfolioImageUpload } from '../helper/portfolio';
 
 const page = () => {
   // User Data
@@ -80,7 +91,6 @@ const page = () => {
       handleUserDataGrab();
     }
   }, [user]);
-  console.log(userData);
   function handleSelectChange(e: React.ChangeEvent<HTMLSelectElement>) {
     setUserData(() =>
       userData ? { ...userData, title: e.target.value } : null
@@ -88,26 +98,74 @@ const page = () => {
   }
 
   async function updateSettings() {
-    if (!user || !userData) return;
+    if (!user || !userData || !userTemp) return;
     setLoading({ ...loading, settings: true });
-    const userDoc = doc(firestore, 'users', user.uid);
-    await updateDoc(userDoc, {
-      email: userData.email,
-      displayName: userData.displayName,
-      title: userData.title,
-    });
-    setLoading({ ...loading, settings: false });
-    setUserTemp(() =>
-      userTemp
-        ? {
-            ...userTemp,
-            email: userData.email,
-            displayName: userData.displayName,
-            title: userData.title,
-          }
-        : null
-    );
-    setEdit({ ...edit, settings: true });
+    // Check If User Has Altered/Entered Their Portfolio Url To Take New Screenshot
+    if (userData.portfolioURL !== userTemp.portfolioURL) {
+      if (!userData.portfolioURL) return;
+      const response = await portfolioImageUpload(
+        userData.portfolioURL,
+        userData.uid
+      );
+
+      if (response) {
+        // Assuming response contains a JSON string representing a Uint8Array
+        let screenshot = new Uint8Array(JSON.parse(response));
+
+        // Convert Uint8Array to a Blob
+        const blob = new Blob([screenshot], {
+          type: 'image/png',
+        });
+        const metadata = {
+          conentType: 'image/png',
+        };
+        console.log(screenshot);
+        if (blob) {
+          // Upload the Blob to Firestore Storage
+          const storageRef = ref(
+            storage,
+            '/users/' + user.uid + '/' + Date.now()
+          );
+          const downloadURL = await uploadBytesResumable(storageRef, blob).then(
+            () => {
+              return getDownloadURL(storageRef);
+            }
+          );
+          console.log(downloadURL);
+        }
+      }
+    }
+
+    // const response = await fetch('/api/screenshot/', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     url: userData.portfolioURL,
+    //     user_id: userData.uid,
+    //   }),
+    // });
+    // console.log(response);
+    // }
+    // const userDoc = doc(firestore, 'users', user.uid);
+    // await updateDoc(userDoc, {
+    //   email: userData.email,
+    //   displayName: userData.displayName,
+    //   title: userData.title,
+    // });
+    // setLoading({ ...loading, settings: false });
+    // setUserTemp(() =>
+    //   userTemp
+    //     ? {
+    //         ...userTemp,
+    //         email: userData.email,
+    //         displayName: userData.displayName,
+    //         title: userData.title,
+    //       }
+    //     : null
+    // );
+    // setEdit({ ...edit, settings: true });
   }
 
   async function updatePreferences() {
@@ -147,6 +205,11 @@ const page = () => {
                 displayName={user?.displayName ? user.displayName : ''}
                 title={userData?.title ? userData.title : ''}
               />
+              <span className='mr-[20px] flex items-center gap-[20px]'>
+                <button className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'>
+                  View Portfolio
+                </button>
+              </span>
             </section>
             <section className='w-full rounded-[8px] border border-border bg-white  px-[20px] py-[31px]'>
               <div className='flex justify-between'>
@@ -162,7 +225,7 @@ const page = () => {
                       setEdit({ ...edit, settings: !edit.settings })
                     }
                   >
-                    <Edit2 size={28} className='' />
+                    <Edit2 size={22} className='' />
                   </button>
                 ) : (
                   <button
@@ -171,12 +234,12 @@ const page = () => {
                       setEdit({ ...edit, settings: !edit.settings });
                     }}
                   >
-                    <X size={28} className='' />
+                    <X size={22} className='' />
                   </button>
                 )}
               </div>
 
-              <div className='mt-[31px] flex flex-col flex-wrap justify-between gap-[20px] second:flex-row'>
+              <div className='mt-[31px] flex flex-col flex-wrap justify-end gap-[20px] second:flex-row'>
                 <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
                   <label htmlFor='email'>Email</label>
                   <input
@@ -242,9 +305,27 @@ const page = () => {
                     </option>
                   </select>
                 </section>
+                <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
+                  <label htmlFor='portfoliourl'>Portfolio URL</label>
+                  <input
+                    id='portfoliourl'
+                    value={userData?.portfolioURL ? userData?.portfolioURL : ''}
+                    className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-important disabled:text-unimportant'
+                    placeholder='Your Portolio URL'
+                    type='text'
+                    disabled={edit.settings ? true : false}
+                    onChange={(e) =>
+                      setUserData((prevData) =>
+                        prevData
+                          ? { ...prevData, portfolioURL: e.target.value }
+                          : null
+                      )
+                    }
+                  />
+                </section>
                 {!edit.settings && (
                   <button
-                    className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
+                    className='flex w-fit justify-self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
                     onClick={() => updateSettings()}
                     disabled={loading.settings}
                   >
@@ -269,7 +350,7 @@ const page = () => {
                       setEdit({ ...edit, preferences: !edit.preferences })
                     }
                   >
-                    <Edit2 size={28} className='' />
+                    <Edit2 size={22} className='' />
                   </button>
                 ) : (
                   <button
@@ -278,7 +359,7 @@ const page = () => {
                       setUserData(userTemp);
                     }}
                   >
-                    <X size={28} className='' />
+                    <X size={22} className='' />
                   </button>
                 )}
               </div>
@@ -341,7 +422,18 @@ const page = () => {
                     Here you can change your password
                   </p>
                 </span>
-                {password ? (
+                <button
+                  className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
+                  onClick={() => {
+                    user.email
+                      ? sendPasswordResetEmail(auth, user.email)
+                      : null;
+                  }}
+                >
+                  Request Password Reset
+                </button>
+              </div>
+              {/* {password ? (
                   <button onClick={() => setPassword(!password)}>
                     <Edit2 size={28} className='' />
                   </button>
@@ -388,9 +480,8 @@ const page = () => {
                     onClick={() => updatePassword()}
                   >
                     Update Password
-                  </button>
-                </div>
-              )}
+                  </button> */}
+              {/* </div> */}
             </section>
           </section>
         </main>
