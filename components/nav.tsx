@@ -15,7 +15,6 @@ const Nav = () => {
   const [userMenu, setUserMenu] = useState<boolean>(false);
   const [userNotif, setUserNotif] = useState<boolean>(false);
   const [user] = useAuthState(auth);
-  console.log(user);
   return (
     <nav className='z-40 flex items-center justify-between bg-white py-[22px] drop-shadow-md'>
       <Link href='/' className='flex w-fit items-center gap-[15px]'>
