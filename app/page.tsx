@@ -68,11 +68,11 @@ export default function Home() {
             </Link>
           </section>
           <section className='mt-[18px] grid grid-cols-1 gap-[20px] second:grid-cols-2 first:grid-cols-3'>
+            {/* <Preview />
             <Preview />
             <Preview />
             <Preview />
-            <Preview />
-            <Preview />
+            <Preview /> */}
           </section>
         </div>
         <div className='mx-auto max-w-[1278px] pb-[150px]'>
