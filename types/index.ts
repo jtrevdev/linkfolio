@@ -9,3 +9,12 @@ export type UserData = {
   title: string | null;
   uid: string;
 };
+
+export type PortfolioData = {
+  photoURL: string;
+  portfolioURL: string;
+  owner_displayName: string;
+  owner_photoURL: string;
+  owner_title: string;
+  views: number;
+};
