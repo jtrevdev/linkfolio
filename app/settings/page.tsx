@@ -6,32 +6,28 @@ import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, firestore, storage } from '@/app/firebase/config';
 import Authenticate from '@/components/authenticate';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { UserData } from '@/types';
-import { Edit, Edit2, Edit3, X } from 'lucide-react';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { AlertCircle, Edit2, X } from 'lucide-react';
+import { sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import {
   getDownloadURL,
   ref,
-  updateMetadata,
   uploadBytes,
   uploadBytesResumable,
-  uploadString,
 } from 'firebase/storage';
-import puppeteer from 'puppeteer';
 import { portfolioImageUpload } from '../helper/portfolio';
+import Image from 'next/image';
 
 const page = () => {
   // User Data
   const [user, isLoading, error] = useAuthState(auth);
   const [userData, setUserData] = useState<UserData | null>(null); // User Data That Can Be Edited
   const [userTemp, setUserTemp] = useState<UserData | null>(null); // Back Up For User Data
+  const [profilePicture, setProfilePicture] = useState<Blob | null>(null); // Hold Users Uploaded Picture
+  const [highlight, setHighlight] = useState<boolean>(false); // Allows Inputs To Be Highlighted Based On User Action
 
-  // Edit Actions
-  const [profile, setProfile] = useState<boolean>(true);
-  const [settings, setSettings] = useState<boolean>(true);
-  const [preferences, setPreferences] = useState<boolean>(true);
-  const [password, setPassword] = useState<boolean>(true);
+  // User Actions
   const [edit, setEdit] = useState<{
     settings: boolean;
     preferences: boolean;
@@ -91,15 +87,20 @@ const page = () => {
       handleUserDataGrab();
     }
   }, [user]);
+
+  // Change Selected Value For Select Input On Users Title
   function handleSelectChange(e: React.ChangeEvent<HTMLSelectElement>) {
     setUserData(() =>
       userData ? { ...userData, title: e.target.value } : null
     );
   }
 
+  // Update Approrpriate Data Changed From User Settings
   async function updateSettings() {
     if (!user || !userData || !userTemp) return;
     setLoading({ ...loading, settings: true });
+
+    let portfolioURL;
     // Check If User Has Altered/Entered Their Portfolio Url To Take New Screenshot
     if (userData.portfolioURL !== userTemp.portfolioURL) {
       if (!userData.portfolioURL) return;
@@ -109,65 +110,86 @@ const page = () => {
       );
 
       if (response) {
-        // Assuming response contains a JSON string representing a Uint8Array
         let screenshot = new Uint8Array(JSON.parse(response));
 
         // Convert Uint8Array to a Blob
         const blob = new Blob([screenshot], {
           type: 'image/png',
         });
-        const metadata = {
-          conentType: 'image/png',
-        };
-        console.log(screenshot);
+
         if (blob) {
           // Upload the Blob to Firestore Storage
           const storageRef = ref(
             storage,
             '/users/' + user.uid + '/' + Date.now()
           );
-          const downloadURL = await uploadBytesResumable(storageRef, blob).then(
+          portfolioURL = await uploadBytesResumable(storageRef, blob).then(
             () => {
               return getDownloadURL(storageRef);
             }
           );
-          console.log(downloadURL);
         }
       }
     }
 
-    // const response = await fetch('/api/screenshot/', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     url: userData.portfolioURL,
-    //     user_id: userData.uid,
-    //   }),
-    // });
-    // console.log(response);
-    // }
-    // const userDoc = doc(firestore, 'users', user.uid);
-    // await updateDoc(userDoc, {
-    //   email: userData.email,
-    //   displayName: userData.displayName,
-    //   title: userData.title,
-    // });
-    // setLoading({ ...loading, settings: false });
-    // setUserTemp(() =>
-    //   userTemp
-    //     ? {
-    //         ...userTemp,
-    //         email: userData.email,
-    //         displayName: userData.displayName,
-    //         title: userData.title,
-    //       }
-    //     : null
-    // );
-    // setEdit({ ...edit, settings: true });
+    let photoURL;
+
+    // Check If User Has Changed Their Profile Picture
+    if (profilePicture) {
+      const fileRef = ref(storage, '/profile/' + user.uid);
+      try {
+        const snapshot = await uploadBytes(fileRef, profilePicture).then(() => {
+          return getDownloadURL(fileRef);
+        });
+        console.log(snapshot);
+        photoURL = snapshot;
+      } catch (e: any) {
+        console.log('error occuring here', e);
+        return;
+      }
+    }
+
+    const userDoc = doc(firestore, 'users', user.uid);
+    await updateDoc(userDoc, {
+      email: userData.email,
+      displayName: userData.displayName,
+      title: userData.title,
+      portfolioURL: userData.portfolioURL,
+    });
+    await updateProfile(user, {
+      displayName: userData.displayName,
+      photoURL: photoURL,
+    });
+
+    setLoading({ ...loading, settings: false });
+    setUserTemp(() =>
+      userTemp
+        ? {
+            ...userTemp,
+            email: userData.email,
+            displayName: userData.displayName,
+            title: userData.title,
+          }
+        : null
+    );
+
+    if (userData.portfolioURL) {
+      const docRef = doc(firestore, 'portfolios', user.uid);
+
+      await setDoc(docRef, {
+        portfolioURL: userData.portfolioURL,
+        photoURL: portfolioURL,
+        views: 0,
+        owner_displayName: userData.displayName,
+        owner_photoURL: userData.photoURL,
+        owner_title: userData.title,
+      });
+    }
+
+    setEdit({ ...edit, settings: true });
   }
 
+  // Update Approrpriate Data Changed From User Preferences
   async function updatePreferences() {
     if (!user || !userData) return;
     setLoading({ ...loading, preferences: true });
@@ -189,8 +211,15 @@ const page = () => {
     setEdit({ ...edit, preferences: true });
   }
 
-  async function updatePassword() {}
-
+  function handlePictureUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files) {
+      setProfilePicture(e.target.files[0]);
+    }
+  }
+  // function handleLinkPortfolio() {
+  //   setEdit({ ...edit, settings: false });
+  // }
+  // Display Authentication Required Message For Non-Logged In Users
   if (!user && !isLoading) {
     return <Authenticate />;
   } else if (user && !isLoading) {
@@ -206,9 +235,19 @@ const page = () => {
                 title={userData?.title ? userData.title : ''}
               />
               <span className='mr-[20px] flex items-center gap-[20px]'>
-                <button className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'>
-                  View Portfolio
-                </button>
+                {userData?.portfolioURL ? (
+                  <button className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'>
+                    View Portfolio
+                  </button>
+                ) : (
+                  <button
+                    className='flex w-fit items-center gap-[8px] self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
+                    // onClick={() => handleLinkPortfolio()}
+                  >
+                    <AlertCircle />
+                    Link Portfolio
+                  </button>
+                )}
               </span>
             </section>
             <section className='w-full rounded-[8px] border border-border bg-white  px-[20px] py-[31px]'>
@@ -239,7 +278,7 @@ const page = () => {
                 )}
               </div>
 
-              <div className='mt-[31px] flex flex-col flex-wrap justify-end gap-[20px] second:flex-row'>
+              <div className='mt-[31px] flex flex-col flex-wrap items-end justify-start gap-[20px] second:flex-row'>
                 <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
                   <label htmlFor='email'>Email</label>
                   <input
@@ -313,6 +352,7 @@ const page = () => {
                     className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-important disabled:text-unimportant'
                     placeholder='Your Portolio URL'
                     type='text'
+                    autoFocus={highlight}
                     disabled={edit.settings ? true : false}
                     onChange={(e) =>
                       setUserData((prevData) =>
@@ -323,16 +363,43 @@ const page = () => {
                     }
                   />
                 </section>
+                <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
+                  <label className='select-none' htmlFor=''>
+                    Profile Picture
+                  </label>
+                  {profilePicture && !edit.settings && (
+                    <Image
+                      className='my-[6px] rounded-full'
+                      src={
+                        (profilePicture &&
+                          URL.createObjectURL(profilePicture)) ||
+                        ''
+                      }
+                      width={50}
+                      height={50}
+                      alt=''
+                    />
+                  )}
+                  <input
+                    type='file'
+                    className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-general placeholder:text-unimportant'
+                    placeholder='Upload Your Profile Picture'
+                    disabled={edit.settings ? true : false}
+                    onChange={handlePictureUpload}
+                  />
+                </section>
                 {!edit.settings && (
-                  <button
-                    className='flex w-fit justify-self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
-                    onClick={() => updateSettings()}
-                    disabled={loading.settings}
-                  >
-                    {loading.settings
-                      ? 'Updating Settings...'
-                      : 'Update Settings'}
-                  </button>
+                  <div className='flex w-full justify-end'>
+                    <button
+                      className='relative right-0 flex justify-self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
+                      onClick={() => updateSettings()}
+                      disabled={loading.settings}
+                    >
+                      {loading.settings
+                        ? 'Updating Settings...'
+                        : 'Update Settings'}
+                    </button>
+                  </div>
                 )}
               </div>
             </section>
@@ -433,55 +500,6 @@ const page = () => {
                   Request Password Reset
                 </button>
               </div>
-              {/* {password ? (
-                  <button onClick={() => setPassword(!password)}>
-                    <Edit2 size={28} className='' />
-                  </button>
-                ) : (
-                  <button onClick={() => setPassword(!password)}>
-                    <X size={28} className='' />
-                  </button>
-                )}
-              </div>
-              {!password && (
-                <div className='mt-[31px] flex flex-col justify-end gap-[20px]'>
-                  <section className='flex flex-[0.5] flex-col gap-[4px]'>
-                    <label htmlFor='old'>Old Password</label>
-                    <input
-                      id='old'
-                      className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] placeholder:text-unimportant'
-                      placeholder='Old Password'
-                      type='password'
-                      disabled={password}
-                    />
-                  </section>
-                  <section className='flex flex-[0.5] flex-col gap-[4px]'>
-                    <label htmlFor='new'>New Password</label>
-                    <input
-                      id='new'
-                      className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] placeholder:text-unimportant'
-                      placeholder='New Password'
-                      type='password'
-                      disabled={password}
-                    />
-                  </section>
-                  <section className='flex flex-[0.5] flex-col gap-[4px]'>
-                    <label htmlFor='confirm'>New Password Confirmation</label>
-                    <input
-                      id='confirm'
-                      className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] placeholder:text-unimportant'
-                      placeholder='New Password Confirmation'
-                      type='password'
-                      disabled={password}
-                    />
-                  </section>
-                  <button
-                    className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
-                    onClick={() => updatePassword()}
-                  >
-                    Update Password
-                  </button> */}
-              {/* </div> */}
             </section>
           </section>
         </main>
