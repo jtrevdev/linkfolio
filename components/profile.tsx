@@ -49,7 +49,9 @@ const Profile = ({ photoURL, displayName, title }: ProfileProps) => {
         alt=''
       />
       <section className='pb-[7px]'>
-        <p className='font-semibold text-important'>{displayName}</p>
+        <p className='font-semibold text-important'>
+          {displayName ? displayName : 'Anonymous'}
+        </p>
         <p className={`font-light text-general `}>
           {title ? title : 'No Title Declared'}
         </p>
