@@ -20,6 +20,7 @@ import { firestore } from '../firebase/config';
 
 type Filter = {
   title: string;
+  query: string;
   active: boolean;
   type: string;
 };
@@ -29,46 +30,55 @@ type Filters = Filter[];
 const filters = [
   {
     title: 'All',
+    query: 'All',
     active: true,
     type: 'category',
   },
   {
     title: 'Software Developer',
+    query: 'se',
     active: false,
     type: 'category',
   },
   {
     title: 'Front End Developer',
+    query: 'fe',
     active: false,
     type: 'category',
   },
   {
     title: 'Back End Developer',
+    query: 'be',
     active: false,
     type: 'category',
   },
   {
     title: 'UI/UX Designer',
+    query: 'ui',
     active: false,
     type: 'category',
   },
   {
     title: 'Product Designer',
+    query: 'pd',
     active: false,
     type: 'category',
   },
   {
     title: 'UNUSED',
+    query: '',
     active: false,
     type: 'seperator',
   },
   {
     title: 'Most Recent',
+    query: 'mr',
     active: false,
     type: 'time',
   },
   {
     title: 'Oldest',
+    query: 'old',
     active: false,
     type: 'time',
   },
@@ -89,7 +99,7 @@ const page = () => {
       ([entry]) => {
         setIsIntersecting(entry.isIntersecting);
       },
-      { rootMargin: '-50px' }
+      { rootMargin: '0px' }
     );
 
     if (ref.current) {
@@ -101,7 +111,7 @@ const page = () => {
 
   useEffect(() => {
     setLoading(true);
-    if (isIntersecting && fetched) {
+    if (isIntersecting && fetched && !limitReached) {
       setLoading(true);
       handlePortfolio();
     }
@@ -156,6 +166,7 @@ const page = () => {
   }
 
   async function handlePortfolio() {
+    console.log(' i was called');
     const collectionRef = collection(firestore, 'portfolios');
     // Appended Conditions That For Category, And Potential Time
 
@@ -175,10 +186,10 @@ const page = () => {
         return active;
       }
     });
-
+    console.log(category);
     // Append Category Where Condition
     if (category) {
-      conditions.push(where('category', '==', category));
+      conditions.push(where('owner_title', '==', category[0].query));
     }
 
     // Get active time filter
@@ -190,7 +201,8 @@ const page = () => {
 
     // Append Appropriate Time Condition
     if (time[0] && time[0].title === 'Most Recent') {
-      // conditions.push(where('category', '==', category))
+      console.log(' in here');
+      conditions.push(where('category', '==', category));
     } else if (time[0] && time[0].title === 'Oldest') {
     }
 
@@ -201,6 +213,7 @@ const page = () => {
 
     // If Category Is Default, All, Avoid Using Where Condition, Simply Query As Normal
     if (category.every((item) => item.title === 'All')) {
+      console.log(' in all');
       q = query(
         collectionRef,
         orderBy('owner_displayName'),
@@ -236,17 +249,65 @@ const page = () => {
         }
         setFetched(true);
       } else {
+        setFetched(true);
         setLimitReached(true);
       }
     }
     // If Category Happens To Not Be Default, Use Where Condition To Utilize Appropriate Filter
     else {
+      q = query(
+        collectionRef,
+        orderBy('owner_displayName'),
+        ...conditions,
+        limit(1),
+        startAfter(lastVisible)
+      );
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const combinedPosts: {
+          photoURL: any;
+          portfolioURL: any;
+          views: any;
+          owner_displayName: any;
+          owner_photoURL: any;
+          owner_title: any;
+        }[] = [];
+        snapshot.docs.forEach((doc) => {
+          combinedPosts.push({
+            photoURL: doc.data().photoURL,
+            portfolioURL: doc.data().portfolioURL,
+            views: doc.data().views,
+            owner_displayName: doc.data().owner_displayName,
+            owner_photoURL: doc.data().owner_photoURL,
+            owner_title: doc.data().owner_title,
+          });
+        });
+        setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+        console.log(combinedPosts);
+        if (portfolios) {
+          setPortfolios([...portfolios, ...combinedPosts]);
+        } else {
+          setPortfolios(combinedPosts);
+        }
+        setFetched(true);
+      } else {
+        setFetched(true);
+        setLimitReached(true);
+      }
     }
   }
   useEffect(() => {
-    handlePortfolio();
+    setPortfolios(null);
+    setFetched(false);
+    setLimitReached(false);
+    setLastVisible(null);
   }, [filter]);
-
+  useEffect(() => {
+    if (fetched === false && !limitReached) {
+      handlePortfolio();
+    }
+  }, [fetched]);
+  console.log(fetched, lastVisible, portfolios, limitReached);
   return (
     <>
       <Modal />
@@ -296,7 +357,7 @@ const page = () => {
 
           <div
             ref={ref}
-            className={`${portfolios ? 'mb-[200px] mt-[35vh]' : 'mb-[200px]'} rounded-[20px] bg-unactive py-[36px] text-center text-[18px] text-important`}
+            className={`${portfolios ? 'mb-[200px] mt-[40vh]' : 'mb-[200px]'} rounded-[20px] bg-unactive py-[36px] text-center text-[18px] text-important`}
           >
             {loading
               ? 'Loading'
