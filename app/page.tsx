@@ -21,27 +21,36 @@ const questions = [
   },
   {
     id: 2,
-    label: 'What is the purpose of Linkfolio?',
+    label: 'How can I get started?',
     renderContent: (
       <p>
-        Linkfolio was created to ultimately give users straight-forward
-        inspiration with real-world portfolios. It’s common that upon searching
-        for portfolios you will be met with the same portfolios that have become
-        popular within the space. Linkfolio allows the user to reach unique
-        designs they have never seen before.
+        Getting started is simple! You first must create an account. Upon
+        creating your account you will be prompted to fill out additional
+        preferences. These preferences can be added or edited at a later time.
+        By linking your portfolio url to your account, you will have your
+        portfolio displayed in the portfolio page automatically.
       </p>
     ),
   },
   {
     id: 3,
-    label: 'What is the purpose of Linkfolio?',
+    label: 'How can I upload an image for my portfolio?',
     renderContent: (
       <p>
-        Linkfolio was created to ultimately give users straight-forward
-        inspiration with real-world portfolios. It’s common that upon searching
-        for portfolios you will be met with the same portfolios that have become
-        popular within the space. Linkfolio allows the user to reach unique
-        designs they have never seen before.
+        When you link your portfolio to your account, an image of your landing
+        page of your portfolio will be taken automatically, this image occurs
+        3.5s after loading your given portfolio url. This image can not be
+        uploaded manually.
+      </p>
+    ),
+  },
+  {
+    id: 4,
+    label: 'How can I update my portfolio displayed on the portfolio page?',
+    renderContent: (
+      <p>
+        To upload your portfolio displayed on the portfolio page, simply update
+        your portfolio url in your account settings, we'll do the rest.
       </p>
     ),
   },
