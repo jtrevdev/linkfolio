@@ -6,7 +6,14 @@ import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, firestore, storage } from '@/app/firebase/config';
 import Authenticate from '@/components/authenticate';
-import { addDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import {
+  addDoc,
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from 'firebase/firestore';
 import { UserData } from '@/types';
 import { AlertCircle, Edit2, X } from 'lucide-react';
 import { sendPasswordResetEmail, updateProfile } from 'firebase/auth';
@@ -155,6 +162,7 @@ const page = () => {
       displayName: userData.displayName,
       title: userData.title,
       portfolioURL: userData.portfolioURL,
+      timestamp: serverTimestamp(),
     });
     await updateProfile(user, {
       displayName: userData.displayName,
@@ -183,6 +191,7 @@ const page = () => {
         owner_displayName: userData.displayName,
         owner_photoURL: userData.photoURL,
         owner_title: userData.title,
+        timestamp: serverTimestamp(),
       });
     }
 
@@ -241,11 +250,12 @@ const page = () => {
                   </button>
                 ) : (
                   <button
-                    className='flex w-fit items-center gap-[8px] self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
+                    className='flex w-fit items-center gap-[8px] self-end rounded-[8px] bg-red-400 px-[25px] py-[13px] text-white'
+                    disabled={true}
                     // onClick={() => handleLinkPortfolio()}
                   >
                     <AlertCircle />
-                    Link Portfolio
+                    Portfolio Not Linked
                   </button>
                 )}
               </span>
