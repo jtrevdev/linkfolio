@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type UserData = {
   displayName: string | null;
   email: string;
@@ -17,4 +19,5 @@ export type PortfolioData = {
   owner_photoURL: string;
   owner_title: string;
   views: number;
+  timestamp: Timestamp;
 };
