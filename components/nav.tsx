@@ -25,7 +25,7 @@ const Nav = () => {
         <Link href='/portfolios' className='transition-all hover:text-cta'>
           Portfolios
         </Link>
-        {user ? (
+        {/* {user ? (
           <section className='relative flex items-center'>
             <button
               className='select-none'
@@ -62,7 +62,7 @@ const Nav = () => {
           </section>
         ) : (
           ''
-        )}
+        )} */}
         {user && type !== 'setup' ? (
           <section className='relative flex items-center'>
             <button
