@@ -63,24 +63,24 @@ const filters = [
     active: false,
     type: 'category',
   },
-  {
-    title: 'UNUSED',
-    query: '',
-    active: false,
-    type: 'seperator',
-  },
-  {
-    title: 'Most Recent',
-    query: 'mr',
-    active: true,
-    type: 'time',
-  },
-  {
-    title: 'Oldest',
-    query: 'old',
-    active: false,
-    type: 'time',
-  },
+  // {
+  //   title: 'UNUSED',
+  //   query: '',
+  //   active: false,
+  //   type: 'seperator',
+  // },
+  // {
+  //   title: 'Most Recent',
+  //   query: 'mr',
+  //   active: true,
+  //   type: 'time',
+  // },
+  // {
+  //   title: 'Oldest',
+  //   query: 'old',
+  //   active: false,
+  //   type: 'time',
+  // },
 ];
 
 const page = () => {
