@@ -6,7 +6,6 @@ import Preview from '@/components/preview';
 import { PortfolioData } from '@/types';
 import {
   collection,
-  doc,
   getDocs,
   limit,
   orderBy,
@@ -14,7 +13,7 @@ import {
   startAfter,
   where,
 } from 'firebase/firestore';
-import { SlidersHorizontal } from 'lucide-react';
+import { ChevronUp, SlidersHorizontal } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { firestore } from '../firebase/config';
 
@@ -36,7 +35,7 @@ const filters = [
   },
   {
     title: 'Software Developer',
-    query: 'se',
+    query: 'swe',
     active: false,
     type: 'category',
   },
@@ -73,7 +72,7 @@ const filters = [
   {
     title: 'Most Recent',
     query: 'mr',
-    active: false,
+    active: true,
     type: 'time',
   },
   {
@@ -106,9 +105,11 @@ const page = () => {
       observer.observe(ref.current);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, []);
-
+  console.log(isIntersecting);
   useEffect(() => {
     setLoading(true);
     if (isIntersecting && fetched && !limitReached) {
@@ -187,8 +188,10 @@ const page = () => {
       }
     });
     console.log(category);
+
     // Append Category Where Condition
     if (category) {
+      console.log(category[0].query);
       conditions.push(where('owner_title', '==', category[0].query));
     }
 
@@ -199,25 +202,27 @@ const page = () => {
       }
     });
 
+    let active;
+
     // Append Appropriate Time Condition
     if (time[0] && time[0].title === 'Most Recent') {
-      console.log(' in here');
-      conditions.push(where('category', '==', category));
+      active = 'recent';
     } else if (time[0] && time[0].title === 'Oldest') {
+      active = 'oldest';
     }
 
-    console.log(category);
-    console.log(time);
-
     let q;
+
+    console.log(conditions);
+    console.log(lastVisible);
 
     // If Category Is Default, All, Avoid Using Where Condition, Simply Query As Normal
     if (category.every((item) => item.title === 'All')) {
       console.log(' in all');
       q = query(
         collectionRef,
-        orderBy('owner_displayName'),
-        limit(1),
+        orderBy('timestamp'),
+        limit(6),
         startAfter(lastVisible)
       );
       const snapshot = await getDocs(q);
@@ -229,6 +234,7 @@ const page = () => {
           owner_displayName: any;
           owner_photoURL: any;
           owner_title: any;
+          timestamp: any;
         }[] = [];
         snapshot.docs.forEach((doc) => {
           combinedPosts.push({
@@ -238,6 +244,7 @@ const page = () => {
             owner_displayName: doc.data().owner_displayName,
             owner_photoURL: doc.data().owner_photoURL,
             owner_title: doc.data().owner_title,
+            timestamp: doc.data().timestamp,
           });
         });
         setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
@@ -255,11 +262,12 @@ const page = () => {
     }
     // If Category Happens To Not Be Default, Use Where Condition To Utilize Appropriate Filter
     else {
+      console.log('in else');
       q = query(
         collectionRef,
-        orderBy('owner_displayName'),
+        orderBy('timestamp'),
         ...conditions,
-        limit(1),
+        limit(6),
         startAfter(lastVisible)
       );
       const snapshot = await getDocs(q);
@@ -271,6 +279,7 @@ const page = () => {
           owner_displayName: any;
           owner_photoURL: any;
           owner_title: any;
+          timestamp: any;
         }[] = [];
         snapshot.docs.forEach((doc) => {
           combinedPosts.push({
@@ -280,6 +289,7 @@ const page = () => {
             owner_displayName: doc.data().owner_displayName,
             owner_photoURL: doc.data().owner_photoURL,
             owner_title: doc.data().owner_title,
+            timestamp: doc.data().timestamp,
           });
         });
         setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
@@ -316,12 +326,12 @@ const page = () => {
       <main className=''>
         <section className='mx-auto max-w-[1278px] pt-[109px]'>
           <div className='filter-menu mb-[100px] flex w-fit items-start gap-[13px] rounded-[8px] border border-border bg-white px-[25px] py-[25px]'>
-            <button>
+            {/* <button>
               <SlidersHorizontal
                 size={42}
                 className='h-[30px] w-[30px] text-important'
               />
-            </button>
+            </button> */}
             <section className='flex flex-row flex-wrap items-center gap-[13px]'>
               {filter.map((filter: Filter, index: number) =>
                 filter.type === 'seperator' ? (
@@ -366,6 +376,12 @@ const page = () => {
                 : 'Load More'}
           </div>
         </section>
+        <button
+          className='fixed bottom-4 right-4 rounded-full bg-cta p-4 text-white'
+          onClick={() => window.scrollTo(0, 0)}
+        >
+          <ChevronUp size={34} />
+        </button>
       </main>
       <Footer />
     </>
