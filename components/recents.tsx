@@ -1,0 +1,53 @@
+'use client';
+import { firestore } from '@/app/firebase/config';
+import { PortfolioData } from '@/types';
+import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import Preview from './preview';
+
+const Recents = () => {
+  const [recentPortfolios, setRecentPortfolios] = useState<
+    PortfolioData[] | null
+  >(null);
+  useEffect(() => {
+    if (!recentPortfolios) {
+      handleRecentPortfolios();
+    }
+  }, []);
+  async function handleRecentPortfolios() {
+    const q = query(
+      collection(firestore, 'portfolios'),
+      orderBy('timestamp', 'desc'),
+      limit(6)
+    );
+
+    const portfoliosSnapshot = await getDocs(q);
+    const combinedPosts = portfoliosSnapshot.docs.map((doc) => ({
+      photoURL: doc.data().photoURL,
+      portfolioURL: doc.data().portfolioURL,
+      views: doc.data().views,
+      owner_displayName: doc.data().owner_displayName,
+      owner_photoURL: doc.data().owner_photoURL,
+      owner_title: doc.data().owner_title,
+      timestamp: doc.data().timestamp,
+    }));
+
+    setRecentPortfolios(combinedPosts);
+  }
+  return (
+    <div className='grid grid-cols-1 gap-[20px] second:grid-cols-2 first:grid-cols-3'>
+      {recentPortfolios?.map((portfolio, index) => (
+        <Preview
+          key={index}
+          redirect={portfolio.portfolioURL}
+          image={portfolio.photoURL}
+          owner_displayName={portfolio.owner_displayName}
+          owner_photoURL={portfolio.owner_photoURL}
+          owner_title={portfolio.owner_title}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default Recents;

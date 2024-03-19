@@ -3,6 +3,7 @@ import Footer from '@/components/footer';
 import Modal from '@/components/modal';
 import Nav from '@/components/nav';
 import Preview from '@/components/preview';
+import Recents from '@/components/recents';
 import Image from 'next/image';
 import Link from 'next/link';
 const questions = [
@@ -76,12 +77,8 @@ export default function Home() {
               view all
             </Link>
           </section>
-          <section className='mt-[18px] grid grid-cols-1 gap-[20px] second:grid-cols-2 first:grid-cols-3'>
-            {/* <Preview />
-            <Preview />
-            <Preview />
-            <Preview />
-            <Preview /> */}
+          <section className=''>
+            <Recents />
           </section>
         </div>
         <div className='mx-auto max-w-[1278px] pb-[150px]'>
