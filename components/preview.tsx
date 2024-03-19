@@ -24,7 +24,7 @@ const Preview = ({
       className='flex flex-col justify-between rounded-[20px]  border border-border bg-white hover:shadow-md second:min-h-[390px]'
     >
       <Image
-        className='w-full rounded-[8px] border-[1px] border-border object-cover p-[17px]'
+        className='w-full rounded-[8px] border-b border-border object-cover p-[17px]'
         src={image}
         width={379}
         height={210}
