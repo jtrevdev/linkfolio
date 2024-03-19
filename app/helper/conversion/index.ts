@@ -31,6 +31,5 @@ export function convertTitle(convert: string) {
       return title.title;
     }
   });
-  console.log(found?.title);
   return String(found?.title);
 }
