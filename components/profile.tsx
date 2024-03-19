@@ -1,5 +1,6 @@
 'use client';
 import { auth, firestore } from '@/app/firebase/config';
+import { convertTitle } from '@/app/helper/conversion';
 import { UserData } from '@/types';
 import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
@@ -53,7 +54,7 @@ const Profile = ({ photoURL, displayName, title }: ProfileProps) => {
           {displayName ? displayName : 'Anonymous'}
         </p>
         <p className={`font-light text-general `}>
-          {title ? title : 'No Title Declared'}
+          {title ? convertTitle(title) : 'No Title Declared'}
         </p>
       </section>
     </section>
