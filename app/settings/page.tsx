@@ -108,6 +108,7 @@ const page = () => {
     setLoading({ ...loading, settings: true });
 
     let portfolioURL;
+
     // Check If User Has Altered/Entered Their Portfolio Url To Take New Screenshot
     if (userData.portfolioURL !== userTemp.portfolioURL) {
       if (!userData.portfolioURL) return;
@@ -148,7 +149,6 @@ const page = () => {
         const snapshot = await uploadBytes(fileRef, profilePicture).then(() => {
           return getDownloadURL(fileRef);
         });
-        console.log(snapshot);
         photoURL = snapshot;
       } catch (e: any) {
         console.log('error occuring here', e);
@@ -163,13 +163,18 @@ const page = () => {
       title: userData.title,
       portfolioURL: userData.portfolioURL,
       timestamp: serverTimestamp(),
+      photoURL: photoURL,
     });
+
+    // Update Local Profile Of User
     await updateProfile(user, {
       displayName: userData.displayName,
       photoURL: photoURL,
     });
 
+    // Change Loading State For User Feedback
     setLoading({ ...loading, settings: false });
+
     setUserTemp(() =>
       userTemp
         ? {
@@ -180,19 +185,35 @@ const page = () => {
           }
         : null
     );
-
-    if (userData.portfolioURL !== userTemp.portfolioURL) {
+    console.log(photoURL);
+    // Only If User Has Altered Portfolio URL, Update Their Portfolio Doc
+    if (
+      userData.portfolioURL !== userTemp.portfolioURL ||
+      userData.displayName !== userTemp.displayName ||
+      photoURL
+    ) {
       const docRef = doc(firestore, 'portfolios', user.uid);
-
-      await setDoc(docRef, {
-        portfolioURL: userData.portfolioURL,
-        photoURL: portfolioURL,
-        views: 0,
-        owner_displayName: userData.displayName,
-        owner_photoURL: userData.photoURL,
-        owner_title: userData.title,
-        timestamp: serverTimestamp(),
-      });
+      console.log(photoURL);
+      if (portfolioURL) {
+        await setDoc(docRef, {
+          portfolioURL: userData.portfolioURL,
+          photoURL: portfolioURL,
+          views: 0,
+          owner_displayName: userData.displayName,
+          owner_photoURL: photoURL,
+          owner_title: userData.title,
+          timestamp: serverTimestamp(),
+        });
+      } else {
+        await updateDoc(docRef, {
+          portfolioURL: userData.portfolioURL,
+          views: 0,
+          owner_displayName: userData.displayName,
+          owner_photoURL: photoURL,
+          owner_title: userData.title,
+          timestamp: serverTimestamp(),
+        });
+      }
     }
 
     setEdit({ ...edit, settings: true });
@@ -225,9 +246,7 @@ const page = () => {
       setProfilePicture(e.target.files[0]);
     }
   }
-  // function handleLinkPortfolio() {
-  //   setEdit({ ...edit, settings: false });
-  // }
+
   // Display Authentication Required Message For Non-Logged In Users
   if (!user && !isLoading) {
     return <Authenticate />;
