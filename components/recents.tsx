@@ -36,16 +36,20 @@ const Recents = () => {
   }
   return (
     <div className='grid grid-cols-1 gap-[20px] second:grid-cols-2 first:grid-cols-3'>
-      {recentPortfolios?.map((portfolio, index) => (
-        <Preview
-          key={index}
-          redirect={portfolio.portfolioURL}
-          image={portfolio.photoURL}
-          owner_displayName={portfolio.owner_displayName}
-          owner_photoURL={portfolio.owner_photoURL}
-          owner_title={portfolio.owner_title}
-        />
-      ))}
+      {recentPortfolios ? (
+        recentPortfolios.map((portfolio, index) => (
+          <Preview
+            key={index}
+            redirect={portfolio.portfolioURL}
+            image={portfolio.photoURL}
+            owner_displayName={portfolio.owner_displayName}
+            owner_photoURL={portfolio.owner_photoURL}
+            owner_title={portfolio.owner_title}
+          />
+        ))
+      ) : (
+        <section className='min-h-[510px]'></section>
+      )}
     </div>
   );
 };
