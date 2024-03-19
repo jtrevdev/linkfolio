@@ -77,7 +77,7 @@ export default function Home() {
               view all
             </Link>
           </section>
-          <section className='mt-[18px]'>
+          <section className='mt-[18px] '>
             <Recents />
           </section>
         </div>
