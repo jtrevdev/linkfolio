@@ -58,7 +58,7 @@ const page = () => {
 
   // Grab Additional User Data
   useEffect(() => {
-    async function handleUserDataGrab() {
+    async function handleUserGrab() {
       if (!user) return;
       const userDoc = doc(firestore, 'users', user.uid);
       const userSnapshot = await getDoc(userDoc);
@@ -91,7 +91,7 @@ const page = () => {
     }
 
     if (user && !isLoading) {
-      handleUserDataGrab();
+      handleUserGrab();
     }
   }, [user]);
 
@@ -181,7 +181,7 @@ const page = () => {
         : null
     );
 
-    if (userData.portfolioURL) {
+    if (userData.portfolioURL !== userTemp.portfolioURL) {
       const docRef = doc(firestore, 'portfolios', user.uid);
 
       await setDoc(docRef, {
