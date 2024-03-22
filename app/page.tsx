@@ -64,7 +64,7 @@ export default function Home() {
       <Nav />
       <main className=''>
         <header className='flex flex-col items-center space-y-[10px] pb-[150px] pt-[109px]'>
-          <h1 className='title'>Your portfolio, linked.</h1>
+          <h1 className='title gradient'>Your portfolio, linked.</h1>
           <h2 className='max-w-[623px] text-center font-light'>
             Build your brand, ignite inspiration. Real-world portfolios for your
             creative journey.

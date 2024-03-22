@@ -74,3 +74,21 @@ select {
     background-color: hsl(200, 20%, 95%);
   }
 }
+
+.gradient {
+  background-size: 150%;
+  -webkit-animation: animatedgradient 8s ease infinite alternate;
+  -moz-animation: animatedgradient 8s ease infinite alternate;
+  animation: animatedgradient 8s ease infinite alternate;
+}
+@keyframes animatedgradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 75% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
