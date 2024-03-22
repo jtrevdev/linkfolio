@@ -1,7 +1,9 @@
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 import Profile from './profile';
+import Loading from './loading';
 
 type PreviewProps = {
   redirect: string;
@@ -18,24 +20,32 @@ const Preview = ({
   owner_title,
   owner_photoURL,
 }: PreviewProps) => {
+  const [loaded, setLoaded] = useState<boolean>(false);
+  function handleLoaded() {
+    setLoaded(true);
+  }
+  console.log(loaded);
   return (
-    <Link
-      href={redirect}
-      className='flex flex-col justify-between rounded-[20px]  border border-border bg-white hover:shadow-md second:min-h-[390px]'
-    >
-      <Image
-        className='w-full rounded-[8px] border-b border-border object-cover p-[17px]'
-        src={image}
-        width={379}
-        height={210}
-        alt=''
-      />
-      <Profile
-        photoURL={owner_photoURL}
-        displayName={owner_displayName}
-        title={owner_title}
-      />
-    </Link>
+    <>
+      <Link
+        href={redirect}
+        className={`flex flex-col justify-between rounded-[20px]  border border-border bg-white transition-all duration-500 hover:shadow-md second:min-h-[390px] ${loaded ? 'rotate-0 scale-100' : 'rotate-6 scale-90'}`}
+      >
+        <Image
+          onLoad={handleLoaded}
+          className={`delay-50 w-full rounded-[8px] border-b border-border object-cover p-[17px]  transition-opacity ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          src={image}
+          width={379}
+          height={210}
+          alt=''
+        />
+        <Profile
+          photoURL={owner_photoURL}
+          displayName={owner_displayName}
+          title={owner_title}
+        />
+      </Link>
+    </>
   );
 };
 
