@@ -32,6 +32,7 @@ const Recents = () => {
       owner_photoURL: doc.data().owner_photoURL,
       owner_title: doc.data().owner_title,
       timestamp: doc.data().timestamp,
+      uid: doc.id,
     }));
 
     setRecentPortfolios(combinedPosts);
@@ -42,7 +43,7 @@ const Recents = () => {
         ? recentPortfolios.map((portfolio, index) => (
             <Preview
               key={index}
-              redirect={portfolio.portfolioURL}
+              redirect={portfolio.uid}
               image={portfolio.photoURL}
               owner_displayName={portfolio.owner_displayName}
               owner_photoURL={portfolio.owner_photoURL}
