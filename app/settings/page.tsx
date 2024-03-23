@@ -157,13 +157,14 @@ const page = () => {
     }
 
     const userDoc = doc(firestore, 'users', user.uid);
+    console.log(userData.title);
     await updateDoc(userDoc, {
       email: userData.email,
       displayName: userData.displayName,
       title: userData.title,
       portfolioURL: userData.portfolioURL,
       timestamp: serverTimestamp(),
-      photoURL: photoURL,
+      photoURL: photoURL || userData.photoURL,
     });
 
     // Update Local Profile Of User
@@ -186,14 +187,17 @@ const page = () => {
         : null
     );
     console.log(photoURL);
+    console.log(portfolioURL);
     // Only If User Has Altered Portfolio URL, Update Their Portfolio Doc
     if (
       userData.portfolioURL !== userTemp.portfolioURL ||
       userData.displayName !== userTemp.displayName ||
+      userData.title !== userTemp.title ||
       photoURL
     ) {
       const docRef = doc(firestore, 'portfolios', user.uid);
       console.log(photoURL);
+      console.log(portfolioURL);
       if (portfolioURL) {
         await setDoc(docRef, {
           portfolioURL: userData.portfolioURL,
@@ -209,7 +213,7 @@ const page = () => {
           portfolioURL: userData.portfolioURL,
           views: 0,
           owner_displayName: userData.displayName,
-          owner_photoURL: photoURL,
+          owner_photoURL: photoURL || userData.photoURL,
           owner_title: userData.title,
           timestamp: serverTimestamp(),
         });
