@@ -11,11 +11,11 @@ const Footer = () => {
             <p className='text-[14px] text-general'>
               Straight-forward real-world portfolios for your inspiration.
             </p>
-            <section className='mt-[20px] flex flex-row gap-[8px]'>
-              <button className='h-[50px] w-[50px] rounded-full bg-[color:#717171]'></button>
-              <button className='h-[50px] w-[50px] rounded-full bg-[color:#717171]'></button>
-              <button className='h-[50px] w-[50px] rounded-full bg-[color:#717171]'></button>
-            </section>
+            {/* <section className='mt-[20px] flex flex-row gap-[8px]'> */}
+            {/*   <button className='h-[50px] w-[50px] rounded-full bg-[color:#717171]'></button> */}
+            {/*   <button className='h-[50px] w-[50px] rounded-full bg-[color:#717171]'></button> */}
+            {/*   <button className='h-[50px] w-[50px] rounded-full bg-[color:#717171]'></button> */}
+            {/* </section> */}
           </span>
         </section>
         <section className='col-span-1 grid grid-cols-3'>
@@ -43,14 +43,14 @@ const Footer = () => {
           </span>
         </section>
       </div>
-      <div>
-        <section className='mb-[81px] border-t border-border'>
-          <p className='mt-[18px] text-center text-[14px] text-unimportant'>
-            All Rights Reserved @ 2024. Designed and Developed by Jonathan
-            Trevino
-          </p>
-        </section>
-      </div>
+      {/* <div> */}
+      {/*   <section className='mb-[81px] border-t border-border'> */}
+      {/*     <p className='mt-[18px] text-center text-[14px] text-unimportant'> */}
+      {/*       All Rights Reserved @ 2024. Designed and Developed by Jonathan */}
+      {/*       Trevino */}
+      {/*     </p> */}
+      {/*   </section> */}
+      {/* </div> */}
     </footer>
   );
 };
