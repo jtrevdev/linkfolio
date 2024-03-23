@@ -20,4 +20,5 @@ export type PortfolioData = {
   owner_title: string;
   views: number;
   timestamp: Timestamp;
+  uid: string;
 };
