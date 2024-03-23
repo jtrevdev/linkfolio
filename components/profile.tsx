@@ -8,9 +8,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 type ProfileProps = {
-  photoURL: string;
-  displayName: string;
-  title: string;
+  photoURL: string | undefined;
+  displayName: string | undefined;
+  title: string | undefined;
 };
 
 const Profile = ({ photoURL, displayName, title }: ProfileProps) => {
