@@ -28,7 +28,7 @@ const Preview = ({
   return (
     <>
       <Link
-        href={redirect}
+        href={`/portfolios/${redirect}`}
         className={`flex flex-col justify-between rounded-[20px]  border border-border bg-white transition-all duration-500 hover:shadow-md second:min-h-[390px] ${loaded ? 'rotate-0 scale-100' : 'rotate-6 scale-90'}`}
       >
         <Image
