@@ -487,29 +487,6 @@ const page = () => {
                 </section>
                 <section className='flex justify-between'>
                   <label className='select-none' htmlFor='subscribe'>
-                    Subscribe to newsletter
-                  </label>
-
-                  <input
-                    type='checkbox'
-                    id='subscribe'
-                    checked={userData ? userData.newsletter : false}
-                    onChange={(e) =>
-                      setUserData((prevData) =>
-                        prevData
-                          ? { ...prevData, newsletter: !prevData.newsletter }
-                          : null
-                      )
-                    }
-                    disabled={edit.preferences}
-                  />
-                </section>
-                {!edit.preferences && (
-                  <button
-                    className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
-                    onClick={() => updatePreferences()}
-                  >
-                    Update Preferences
                   </button>
                 )}
               </div>
