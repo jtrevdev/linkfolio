@@ -235,6 +235,7 @@ const page = () => {
           owner_photoURL: any;
           owner_title: any;
           timestamp: any;
+          uid: any;
         }[] = [];
         snapshot.docs.forEach((doc) => {
           combinedPosts.push({
@@ -245,6 +246,7 @@ const page = () => {
             owner_photoURL: doc.data().owner_photoURL,
             owner_title: doc.data().owner_title,
             timestamp: doc.data().timestamp,
+            uid: doc.id,
           });
         });
         setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
@@ -280,6 +282,7 @@ const page = () => {
           owner_photoURL: any;
           owner_title: any;
           timestamp: any;
+          uid: any;
         }[] = [];
         snapshot.docs.forEach((doc) => {
           combinedPosts.push({
@@ -290,6 +293,7 @@ const page = () => {
             owner_photoURL: doc.data().owner_photoURL,
             owner_title: doc.data().owner_title,
             timestamp: doc.data().timestamp,
+            uid: doc.id,
           });
         });
         setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
