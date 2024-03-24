@@ -359,7 +359,7 @@ const page = () => {
             {portfolios?.map((portfolio, index) => (
               <Preview
                 key={index}
-                redirect={portfolio.portfolioURL}
+                redirect={portfolio.uid}
                 image={portfolio.photoURL}
                 owner_displayName={portfolio.owner_displayName}
                 owner_photoURL={portfolio.owner_photoURL}
