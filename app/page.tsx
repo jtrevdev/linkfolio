@@ -2,6 +2,7 @@ import Accordion from '@/components/accordion';
 import Footer from '@/components/footer';
 import Modal from '@/components/modal';
 import Nav from '@/components/nav';
+import Newsletter from '@/components/newsletter';
 import Preview from '@/components/preview';
 import Recents from '@/components/recents';
 import Image from 'next/image';
@@ -149,25 +150,7 @@ export default function Home() {
             <Accordion items={questions} keepOthersOpen={false} />
           </section>
         </div>
-        <div className='mx-auto flex max-w-[1278px] flex-col gap-[20px] pb-[370px] second:flex-row second:items-center second:justify-between'>
-          <section>
-            <h2 className='font-semibold text-important'>
-              Join our newsletter
-            </h2>
-            <p className='text-general'>
-              Stay up to date as we push out new features
-            </p>
-          </section>
-          <section className='flex justify-between gap-[25px]'>
-            <input
-              placeholder='Your Email Address'
-              className='w-full rounded-[20px] border border-border bg-white px-[19px] py-[13px] placeholder:text-unimportant second:w-[458px]'
-            />
-            <button className='rounded-[20px] bg-cta px-[44px] py-[12px] text-white'>
-              Submit
-            </button>
-          </section>
-        </div>
+        <Newsletter />
       </main>
       <Footer />
     </>
