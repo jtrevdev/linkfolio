@@ -195,7 +195,6 @@ const page = () => {
     ) {
       const docRef = doc(firestore, 'portfolios', user.uid);
       const docSnap = await getDoc(docRef);
-      console.log(portfolioURL, photoURL, userData.photoURL);
       if (portfolioURL) {
         await setDoc(docRef, {
           portfolioURL: userData.portfolioURL,
@@ -206,8 +205,8 @@ const page = () => {
           owner_title: userData.title,
           timestamp: serverTimestamp(),
         });
-      } else if (!docSnap.exists()) {
-        await setDoc(docRef, {
+      } else if (docSnap.exists()) {
+        await updateDoc(docRef, {
           portfolioURL: userData.portfolioURL,
           views: 0,
           owner_displayName: userData.displayName,
