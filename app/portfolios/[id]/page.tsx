@@ -121,9 +121,9 @@ const page = () => {
                 displayName={portfolio?.owner_displayName}
                 title={portfolio?.owner_title}
               />
-              <button className='flex h-[55px] w-[55px] items-center justify-center rounded-full bg-gray-500'>
-                <Mail />
-              </button>
+              {/* <button className='flex h-[55px] w-[55px] items-center justify-center rounded-full bg-gray-500'> */}
+              {/*   <Mail /> */}
+              {/* </button> */}
             </section>
             {portfolio && (
               <a
@@ -160,7 +160,7 @@ const page = () => {
                 />
               ))
             ) : (
-              <p className='text-center text-[14px] italic text-red-400'>
+              <p className='text-[14px] italic text-red-400'>
                 No Similar Portfolios Found
               </p>
             )}

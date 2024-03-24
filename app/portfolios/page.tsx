@@ -327,9 +327,9 @@ const page = () => {
         <section className='mx-auto max-w-[1278px] pt-[109px]'>
           <div className='filter-menu mb-[100px] flex w-fit items-start gap-[13px] rounded-[8px] border border-border bg-white px-[25px] py-[25px]'>
             {/* <button>
-              <SlidersHorizontal
+              <slidershorizontal
                 size={42}
-                className='h-[30px] w-[30px] text-important'
+                classname='h-[30px] w-[30px] text-important'
               />
             </button> */}
             <section className='flex flex-row flex-wrap items-center gap-[13px]'>
@@ -367,7 +367,7 @@ const page = () => {
 
           <div
             ref={ref}
-            className={`${portfolios ? 'mb-[200px] mt-[40vh]' : 'mb-[200px]'} rounded-[20px] bg-unactive py-[36px] text-center text-[18px] text-important`}
+            className={`${portfolios ? 'mb-[200px] mt-[50vh]' : 'mb-[200px]'} rounded-[20px] bg-unactive py-[36px] text-center text-[18px] text-important`}
           >
             {loading
               ? 'Loading'
