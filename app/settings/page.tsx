@@ -150,27 +150,27 @@ const page = () => {
           return getDownloadURL(fileRef);
         });
         photoURL = snapshot;
+
+        const userDoc = doc(firestore, 'users', user.uid);
+        await updateDoc(userDoc, {
+          email: userData.email,
+          displayName: userData.displayName,
+          title: userData.title,
+          portfolioURL: userData.portfolioURL,
+          timestamp: serverTimestamp(),
+          photoURL: photoURL || userData.photoURL,
+        });
+
+        // Update Local Profile Of User
+        await updateProfile(user, {
+          displayName: userData.displayName,
+          photoURL: photoURL,
+        });
       } catch (e: any) {
         console.log('error occuring here', e);
         return;
       }
     }
-
-    const userDoc = doc(firestore, 'users', user.uid);
-    await updateDoc(userDoc, {
-      email: userData.email,
-      displayName: userData.displayName,
-      title: userData.title,
-      portfolioURL: userData.portfolioURL,
-      timestamp: serverTimestamp(),
-      photoURL: photoURL || userData.photoURL,
-    });
-
-    // Update Local Profile Of User
-    await updateProfile(user, {
-      displayName: userData.displayName,
-      photoURL: photoURL,
-    });
 
     // Change Loading State For User Feedback
     setLoading({ ...loading, settings: false });
@@ -185,6 +185,7 @@ const page = () => {
           }
         : null
     );
+
     // Only If User Has Altered Portfolio URL, Update Their Portfolio Doc
     if (
       userData.portfolioURL !== userTemp.portfolioURL ||
@@ -193,18 +194,20 @@ const page = () => {
       photoURL
     ) {
       const docRef = doc(firestore, 'portfolios', user.uid);
+      const docSnap = await getDoc(docRef);
+      console.log(portfolioURL, photoURL, userData.photoURL);
       if (portfolioURL) {
         await setDoc(docRef, {
           portfolioURL: userData.portfolioURL,
           photoURL: portfolioURL,
           views: 0,
           owner_displayName: userData.displayName,
-          owner_photoURL: photoURL,
+          owner_photoURL: photoURL || userData.photoURL,
           owner_title: userData.title,
           timestamp: serverTimestamp(),
         });
-      } else {
-        await updateDoc(docRef, {
+      } else if (!docSnap.exists()) {
+        await setDoc(docRef, {
           portfolioURL: userData.portfolioURL,
           views: 0,
           owner_displayName: userData.displayName,
