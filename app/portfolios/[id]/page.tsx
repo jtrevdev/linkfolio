@@ -152,7 +152,7 @@ const page = () => {
             {extraPortfolios !== null && extraPortfolios.length !== 0 ? (
               extraPortfolios.map((extra) => (
                 <Preview
-                  redirect={extra.portfolioURL}
+                  redirect={extra.uid}
                   image={extra.photoURL}
                   owner_displayName={extra.owner_displayName}
                   owner_title={extra.owner_title}
