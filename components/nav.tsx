@@ -83,13 +83,13 @@ const Nav = () => {
             </button>
             {userMenu && (
               <div className='absolute right-0 top-12 flex w-[146px] flex-col gap-[5px] rounded-[8px] border border-border bg-white px-[6px] py-[13px]'>
-                <Link
-                  className='flex items-center gap-[8px] rounded-[8px] px-[2px] py-[8px] text-[14px] text-important hover:bg-unactive'
-                  href='/'
-                >
-                  <Folder />
-                  My Portfolio
-                </Link>
+                {/* <Link */}
+                {/*   className='flex items-center gap-[8px] rounded-[8px] px-[2px] py-[8px] text-[14px] text-important hover:bg-unactive' */}
+                {/*   href='/' */}
+                {/* > */}
+                {/*   <Folder /> */}
+                {/*   My Portfolio */}
+                {/* </Link> */}
                 <Link
                   className='flex items-center gap-[8px] rounded-[8px] px-[2px] py-[8px] text-[14px] text-important hover:bg-unactive'
                   href='/settings'
