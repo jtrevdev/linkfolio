@@ -485,10 +485,6 @@ const page = () => {
                     }
                   />
                 </section>
-                <section className='flex justify-between'>
-                  <label className='select-none' htmlFor='subscribe'>
-                  </button>
-                )}
               </div>
             </section>
             <section className='w-full rounded-[8px] border border-border bg-white  px-[20px] py-[31px]'>
