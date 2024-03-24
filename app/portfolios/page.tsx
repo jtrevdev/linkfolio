@@ -109,7 +109,6 @@ const page = () => {
       observer.disconnect();
     };
   }, []);
-  console.log(isIntersecting);
   useEffect(() => {
     setLoading(true);
     if (isIntersecting && fetched && !limitReached) {

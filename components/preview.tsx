@@ -24,7 +24,6 @@ const Preview = ({
   function handleLoaded() {
     setLoaded(true);
   }
-  console.log(loaded);
   return (
     <>
       <Link

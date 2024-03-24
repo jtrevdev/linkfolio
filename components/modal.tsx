@@ -49,11 +49,8 @@ const Modal = () => {
   async function handleFormSubmission(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    console.log('in here');
-    console.log(submitType);
     // Setup does not require email/passwords check these first
     if (submitType === 'setup') {
-      console.log(user);
       // Make sure user is logged in
       if (!user) return;
       // Update users preferences with what they enter
@@ -73,7 +70,6 @@ const Modal = () => {
                 return getDownloadURL(fileRef);
               }
             );
-            console.log(snapshot);
             photoURL = snapshot;
           } catch (e: any) {
             console.log(e);

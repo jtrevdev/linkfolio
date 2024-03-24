@@ -5,10 +5,8 @@ import React, { FormEvent, useState } from 'react';
 
 const Newsletter = () => {
   const [email, setEmail] = useState<string | null>(null);
-  console.log(email);
   async function handleNewsLetter(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    console.log('in it');
     const newsletterDoc = doc(firestore, 'newsletter', 'accepted');
     await updateDoc(newsletterDoc, {
       email: arrayUnion(email),

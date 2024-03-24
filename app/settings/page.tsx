@@ -157,7 +157,6 @@ const page = () => {
     }
 
     const userDoc = doc(firestore, 'users', user.uid);
-    console.log(userData.title);
     await updateDoc(userDoc, {
       email: userData.email,
       displayName: userData.displayName,
@@ -186,8 +185,6 @@ const page = () => {
           }
         : null
     );
-    console.log(photoURL);
-    console.log(portfolioURL);
     // Only If User Has Altered Portfolio URL, Update Their Portfolio Doc
     if (
       userData.portfolioURL !== userTemp.portfolioURL ||
@@ -196,8 +193,6 @@ const page = () => {
       photoURL
     ) {
       const docRef = doc(firestore, 'portfolios', user.uid);
-      console.log(photoURL);
-      console.log(portfolioURL);
       if (portfolioURL) {
         await setDoc(docRef, {
           portfolioURL: userData.portfolioURL,
