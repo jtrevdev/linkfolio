@@ -196,7 +196,12 @@ const page = () => {
               />
               <div
                 className='radial-progress absolute bottom-2 right-2 z-[5] cursor-pointer'
-                style={{ '--value': progress, '--size': '2rem' }}
+                style={
+                  {
+                    '--value': progress,
+                    '--size': '2rem',
+                  } as React.CSSProperties
+                }
                 role='progressbar'
                 onClick={() => {
                   setClicked(!clicked);
