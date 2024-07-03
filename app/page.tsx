@@ -1,4 +1,3 @@
-import Accordion from '@/components/accordion';
 import Footer from '@/components/footer';
 import Nav from '@/components/nav';
 import Newsletter from '@/components/newsletter';
