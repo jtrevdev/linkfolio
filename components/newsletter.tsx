@@ -13,7 +13,7 @@ const Newsletter = () => {
     });
   }
   return (
-    <div className='mx-auto flex max-w-[1278px] flex-col gap-[20px] pb-[370px] second:flex-row second:items-center second:justify-between'>
+    <div className='mx-auto flex flex-col gap-[20px] pb-[370px] second:flex-row second:items-center second:justify-between'>
       <section>
         <h2 className='font-semibold text-important'>Join our newsletter</h2>
         <p className='text-general'>
