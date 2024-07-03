@@ -20,6 +20,9 @@
 .DS_Store
 *.pem
 
+# lambda function
+/linkfolioLambda/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
