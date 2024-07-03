@@ -22,8 +22,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
-      <body className={poppins.className}>{children}</body>
+    <html lang='en' data-theme='light'>
+      <body
+        className={`${poppins.className} mx-auto max-w-[1536px] px-[20px] text-[color:#07233D] md:px-[40px] xl:px-[60px] 2xl:px-[133px]`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
