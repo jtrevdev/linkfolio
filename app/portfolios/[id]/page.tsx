@@ -6,7 +6,6 @@ import Preview from '@/components/preview';
 import Profile from '@/components/profile';
 import { PortfolioData } from '@/types';
 import {
-  Firestore,
   collection,
   doc,
   getDoc,
@@ -15,12 +14,12 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { Mail } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import path from 'path';
 import React, { useEffect, useState } from 'react';
+import { CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import { Play, Pause, ExternalLink } from 'lucide-react';
 
 const page = () => {
   const uid = usePathname().split('/')[2];
@@ -28,17 +27,46 @@ const page = () => {
   const [extraPortfolios, setExtraPortfolios] = useState<
     PortfolioData[] | [] | null
   >(null);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [clicked, setClicked] = useState<boolean>(false);
 
+  console.log(portfolio);
   useEffect(() => {
     handlePortfolio();
   }, []);
+
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (portfolio) {
       handleExtraPortfolios();
     }
-  }, [portfolio]);
+    if (
+      portfolio &&
+      portfolio.photoURL &&
+      portfolio.photoURL.length > 0 &&
+      !clicked
+    ) {
+      setImageSrc(portfolio.photoURL[currentPhotoIndex]);
 
+      const intervalId = setInterval(() => {
+        setCurrentPhotoIndex(
+          (prevIndex) => (prevIndex + 1) % portfolio.photoURL.length
+        );
+        setProgress(0); // Reset progress for the new image
+      }, 4000);
+
+      const progressIntervalId = setInterval(() => {
+        setProgress((prevProgress) => (prevProgress + 1) % 101); // Increment progress every second
+      }, 40); // Adjust the interval to match the desired smoothness of the progress bar
+
+      return () => {
+        clearInterval(intervalId);
+        clearInterval(progressIntervalId);
+      };
+    }
+  }, [portfolio, currentPhotoIndex, clicked]);
   async function handlePortfolio() {
     const portfolioDocRef = doc(firestore, 'portfolios', uid);
     const portfolioDocSnap = await getDoc(portfolioDocRef);
@@ -52,6 +80,9 @@ const page = () => {
         timestamp: portfolioDocSnap.data().timestamp,
         views: portfolioDocSnap.data().views,
         uid: uid,
+        likes: portfolioDocSnap.data().likes,
+        videoURL: portfolioDocSnap.data().videoURL,
+        id: portfolioDocSnap.id,
       });
     }
   }
@@ -88,6 +119,9 @@ const page = () => {
               views: portfolio.data().views,
               timestamp: portfolio.data().timestamp,
               uid: portfolio.id,
+              likes: portfolio.data().likes,
+              videoURL: portfolio.data().videoURL,
+              id: portfolio.id,
             },
           ]);
         } else {
@@ -101,6 +135,9 @@ const page = () => {
               views: portfolio.data().views,
               timestamp: portfolio.data().timestamp,
               uid: portfolio.id,
+              likes: portfolio.data().likes,
+              videoURL: portfolio.data().videoURL,
+              id: portfolio.id,
             },
           ]);
         }
@@ -112,59 +149,97 @@ const page = () => {
   return (
     <>
       <Nav />
-      <main className=''>
-        <section className='mx-auto max-w-[1278px] pt-[109px]'>
-          <div className='flex flex-col items-center justify-between gap-[40px] second:flex-row second:gap-[0px]'>
-            <section className='flex w-full items-center justify-between rounded-[8px] border border-border bg-white pr-[31px] second:flex-[0.7]'>
+      <main className='min-h-screen'>
+        <section className='mx-auto pt-[109px]'>
+          <section className='flex w-full flex-col items-center justify-between gap-5 bg-white md:flex-row'>
+            {portfolio ? (
               <Profile
                 photoURL={portfolio?.owner_photoURL}
                 displayName={portfolio?.owner_displayName}
                 title={portfolio?.owner_title}
               />
-              {/* <button className='flex h-[55px] w-[55px] items-center justify-center rounded-full bg-gray-500'> */}
-              {/*   <Mail /> */}
-              {/* </button> */}
-            </section>
+            ) : (
+              <div className='flex w-full flex-col items-center justify-between gap-5 md:flex-row'>
+                <div className='flex items-center gap-[10px]'>
+                  <div className='relative h-[70px] w-[70px]'>
+                    <div className='skeleton h-full  rounded-full bg-border'></div>
+                  </div>
+                  <div className='flex w-fit flex-col gap-1'>
+                    <span className='skeleton h-[24px] w-[143px]  bg-border'></span>
+                    <span className='skeleton h-[20px] w-[143px]  bg-border'></span>
+                  </div>
+                </div>
+                <div className='skeleton h-[46px] w-[186px] bg-border'></div>
+              </div>
+            )}
             {portfolio && (
               <a
                 href={portfolio?.portfolioURL}
                 target='_blank'
-                className='h-fit rounded-[8px] bg-cta px-[42px] py-[11px] text-white'
+                className='flex h-fit items-center gap-2 rounded-[8px] bg-[color:#8BBFFC] px-[42px] py-[11px] text-white hover:bg-[color:#4784D9]'
               >
+                <ExternalLink />
                 Visit Portfolio
               </a>
             )}
-          </div>
+          </section>
         </section>
-        <section className='relative mx-auto mb-[81px] mt-[50px] aspect-auto aspect-video w-full  max-w-[1278px] bg-gray-50 first:h-[709px]'>
-          {portfolio?.photoURL && (
-            <Image
-              className='w-full border border-border object-contain'
-              src={portfolio?.photoURL}
-              fill
-              alt=''
-            />
+        <section className='relative mx-auto mb-[40px] mt-[50px] aspect-video w-full  first:h-[709px]'>
+          {portfolio && imageSrc ? (
+            <div>
+              <Image
+                src={imageSrc}
+                className='border-[color:#BFC5C5]/50 z-[2] select-none rounded-2xl border shadow-lg'
+                fill
+                alt='highlight'
+                draggable={false}
+              />
+              <div
+                className='radial-progress absolute bottom-2 right-2 z-[5] cursor-pointer'
+                style={{ '--value': progress, '--size': '2rem' }}
+                role='progressbar'
+                onClick={() => {
+                  setClicked(!clicked);
+                  setProgress(0);
+                }}
+              >
+                {clicked ? <Play size={16} /> : <Pause size={16} />}
+              </div>
+            </div>
+          ) : (
+            <div className='skeleton aspect-video w-full border-b border-border bg-border object-cover '></div>
           )}
         </section>
-        <section className='mx-auto mb-[204px] max-w-[1278px]'>
-          <h1 className='heading'>Similar Portfolios</h1>
-          <section className='mt-[18px] grid grid-cols-1 gap-[20px] second:grid-cols-2 first:grid-cols-3'>
-            {extraPortfolios !== null && extraPortfolios.length !== 0 ? (
-              extraPortfolios.map((extra) => (
-                <Preview
-                  redirect={extra.uid}
-                  image={extra.photoURL}
-                  owner_displayName={extra.owner_displayName}
-                  owner_title={extra.owner_title}
-                  owner_photoURL={extra.owner_photoURL}
-                />
-              ))
-            ) : (
-              <p className='text-[14px] italic text-red-400'>
-                No Similar Portfolios Found
-              </p>
-            )}
-          </section>
+        <section className='mb-[81px]'>
+          {portfolio && imageSrc && portfolio.photoURL ? (
+            <div className='grid grid-cols-2 gap-5 lg:grid-cols-4'>
+              {portfolio.photoURL.map((src, index) => (
+                <div
+                  className=' relative aspect-video cursor-pointer rounded-2xl shadow-md transition-all ease-in-out hover:scale-[1.01] hover:shadow-lg'
+                  onClick={() => {
+                    setClicked(true);
+                    setImageSrc(src);
+                    setCurrentPhotoIndex(index);
+                  }}
+                >
+                  <Image
+                    src={src}
+                    fill
+                    alt='smaller portfolio'
+                    draggable={false}
+                    className='border-[color:#BFC5C5]/50 rounded-2xl border'
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className='grid grid-cols-2 gap-5 lg:grid-cols-4'>
+              <div className='skeleton relative aspect-video w-full'></div>
+              <div className='skeleton relative aspect-video w-full'></div>
+              <div className='skeleton relative aspect-video w-full'></div>
+              <div className='skeleton relative aspect-video w-full'></div>
+            </div>
+          )}
         </section>
       </main>
       <Footer />
