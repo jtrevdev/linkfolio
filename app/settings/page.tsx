@@ -4,27 +4,18 @@ import Nav from '@/components/nav';
 import Profile from '@/components/profile';
 import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, firestore, storage } from '@/app/firebase/config';
+import { firestore } from '@/app/firebase/config';
+import { auth } from '@/app/firebase/config';
 import Authenticate from '@/components/authenticate';
-import {
-  addDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { UserData } from '@/types';
-import { AlertCircle, Edit2, X } from 'lucide-react';
-import { sendPasswordResetEmail, updateProfile } from 'firebase/auth';
-import {
-  getDownloadURL,
-  ref,
-  uploadBytes,
-  uploadBytesResumable,
-} from 'firebase/storage';
-import { portfolioImageUpload } from '../helper/portfolio';
+import { FileWarning, Folders } from 'lucide-react';
 import Image from 'next/image';
+
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { uploadPortfolio } from '@/lib/portfolio';
+import { updateUserSettings } from '@/lib/user';
 
 const page = () => {
   // User Data
@@ -32,31 +23,31 @@ const page = () => {
   const [userData, setUserData] = useState<UserData | null>(null); // User Data That Can Be Edited
   const [userTemp, setUserTemp] = useState<UserData | null>(null); // Back Up For User Data
   const [profilePicture, setProfilePicture] = useState<Blob | null>(null); // Hold Users Uploaded Picture
-  const [highlight, setHighlight] = useState<boolean>(false); // Allows Inputs To Be Highlighted Based On User Action
+  const router = useRouter();
 
   // User Actions
   const [edit, setEdit] = useState<{
+    portfolio: boolean;
     settings: boolean;
     preferences: boolean;
-    password: boolean;
   }>({
+    portfolio: true,
     settings: true,
     preferences: true,
-    password: true,
   });
 
   // Loading States
   const [loading, setLoading] = useState<{
     settings: boolean;
     preferences: boolean;
-    password: boolean;
+    portfolio: boolean;
   }>({
     settings: false,
     preferences: false,
-    password: false,
+    portfolio: false,
   });
 
-  // Grab Additional User Data
+  // Grab Detailed User Data
   useEffect(() => {
     async function handleUserGrab() {
       if (!user) return;
@@ -73,6 +64,9 @@ const page = () => {
           setup: userSnapshot.data().setup,
           title: userSnapshot.data().title,
           uid: userSnapshot.data().uid,
+          firstName: userSnapshot.data().displayName.split(' ')[0],
+          lastName: userSnapshot.data().displayName.split(' ')[1],
+          status: userSnapshot.data().status,
         });
 
         // Create Duplicate User Data For User To Alter Freely
@@ -86,6 +80,10 @@ const page = () => {
           setup: userSnapshot.data().setup,
           title: userSnapshot.data().title,
           uid: userSnapshot.data().uid,
+          firstName: userSnapshot.data().displayName.split(' ')[0],
+          lastName: userSnapshot.data().displayName.split(' ')[1],
+
+          status: userSnapshot.data().status,
         });
       }
     }
@@ -102,75 +100,24 @@ const page = () => {
     );
   }
 
+  // Update Portfolio By Recording GIF at URL User Provides
+  async function updatePortfolio() {
+    if (!user || !userData || !userTemp) return;
+    setLoading({ ...loading, portfolio: true });
+
+    if (!userData.portfolioURL) return;
+
+    await uploadPortfolio(userData, router);
+
+    setLoading({ ...loading, portfolio: false });
+  }
+
   // Update Approrpriate Data Changed From User Settings
   async function updateSettings() {
     if (!user || !userData || !userTemp) return;
     setLoading({ ...loading, settings: true });
 
-    let portfolioURL;
-
-    // Check If User Has Altered/Entered Their Portfolio Url To Take New Screenshot
-    if (userData.portfolioURL !== userTemp.portfolioURL) {
-      if (!userData.portfolioURL) return;
-      const response = await portfolioImageUpload(
-        userData.portfolioURL,
-        userData.uid
-      );
-
-      if (response) {
-        let screenshot = new Uint8Array(JSON.parse(response));
-
-        // Convert Uint8Array to a Blob
-        const blob = new Blob([screenshot], {
-          type: 'image/png',
-        });
-
-        if (blob) {
-          // Upload the Blob to Firestore Storage
-          const storageRef = ref(
-            storage,
-            '/users/' + user.uid + '/' + Date.now()
-          );
-          portfolioURL = await uploadBytesResumable(storageRef, blob).then(
-            () => {
-              return getDownloadURL(storageRef);
-            }
-          );
-        }
-      }
-    }
-
-    let photoURL;
-
-    // Check If User Has Changed Their Profile Picture
-    if (profilePicture) {
-      const fileRef = ref(storage, '/profile/' + user.uid);
-      try {
-        const snapshot = await uploadBytes(fileRef, profilePicture).then(() => {
-          return getDownloadURL(fileRef);
-        });
-        photoURL = snapshot;
-
-        const userDoc = doc(firestore, 'users', user.uid);
-        await updateDoc(userDoc, {
-          email: userData.email,
-          displayName: userData.displayName,
-          title: userData.title,
-          portfolioURL: userData.portfolioURL,
-          timestamp: serverTimestamp(),
-          photoURL: photoURL || userData.photoURL,
-        });
-
-        // Update Local Profile Of User
-        await updateProfile(user, {
-          displayName: userData.displayName,
-          photoURL: photoURL,
-        });
-      } catch (e: any) {
-        console.log('error occuring here', e);
-        return;
-      }
-    }
+    await updateUserSettings(userData, profilePicture, user);
 
     // Change Loading State For User Feedback
     setLoading({ ...loading, settings: false });
@@ -180,66 +127,13 @@ const page = () => {
         ? {
             ...userTemp,
             email: userData.email,
-            displayName: userData.displayName,
+            displayName: userData.firstName + ' ' + userData.lastName,
             title: userData.title,
           }
         : null
     );
 
-    // Only If User Has Altered Portfolio URL, Update Their Portfolio Doc
-    if (
-      userData.portfolioURL !== userTemp.portfolioURL ||
-      userData.displayName !== userTemp.displayName ||
-      userData.title !== userTemp.title ||
-      photoURL
-    ) {
-      const docRef = doc(firestore, 'portfolios', user.uid);
-      const docSnap = await getDoc(docRef);
-      if (portfolioURL) {
-        await setDoc(docRef, {
-          portfolioURL: userData.portfolioURL,
-          photoURL: portfolioURL,
-          views: 0,
-          owner_displayName: userData.displayName,
-          owner_photoURL: photoURL || userData.photoURL,
-          owner_title: userData.title,
-          timestamp: serverTimestamp(),
-        });
-      } else if (docSnap.exists()) {
-        await updateDoc(docRef, {
-          portfolioURL: userData.portfolioURL,
-          views: 0,
-          owner_displayName: userData.displayName,
-          owner_photoURL: photoURL || userData.photoURL,
-          owner_title: userData.title,
-          timestamp: serverTimestamp(),
-        });
-      }
-    }
-
     setEdit({ ...edit, settings: true });
-  }
-
-  // Update Approrpriate Data Changed From User Preferences
-  async function updatePreferences() {
-    if (!user || !userData) return;
-    setLoading({ ...loading, preferences: true });
-    const userDoc = doc(firestore, 'users', user.uid);
-    await updateDoc(userDoc, {
-      emailVisible: userData.emailVisible,
-      newsletter: userData?.newsletter,
-    });
-    setLoading({ ...loading, preferences: false });
-    setUserTemp(() =>
-      userTemp
-        ? {
-            ...userTemp,
-            emailVisible: userData.emailVisible,
-            newsletter: userData.newsletter,
-          }
-        : null
-    );
-    setEdit({ ...edit, preferences: true });
   }
 
   function handlePictureUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -255,66 +149,155 @@ const page = () => {
     return (
       <>
         <Nav />
-        <main>
-          <section className='mx-auto mb-[200px] mt-[109px] max-w-[1278px] space-y-[20px]'>
-            <section className='flex w-full items-center justify-between rounded-[8px] border border-border bg-white'>
+        <main className='min-h-screen'>
+          <section className='mx-auto mb-[200px]  space-y-[20px] pt-[150px]'>
+            <section className='border-[color:#BFC5C5]/50 flex w-full flex-wrap items-center justify-between gap-5 rounded-[10px] border bg-white px-[20px] py-[15px]'>
               <Profile
-                photoURL={user.photoURL ? user.photoURL : ''}
-                displayName={user?.displayName ? user.displayName : ''}
-                title={userData?.title ? userData.title : ''}
+                title={userData?.title ? userData?.title : 'No Title Set'}
+                displayName={
+                  userData?.displayName ? userData?.displayName : 'No Name Set'
+                }
+                photoURL={user?.photoURL ? user?.photoURL : ''}
               />
-              <span className='mr-[20px] flex items-center gap-[20px]'>
-                {userData?.portfolioURL ? (
-                  <button className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'>
-                    View Portfolio
+              <div className='flex w-full flex-wrap justify-end gap-5 md:w-fit'>
+                {userTemp?.portfolioURL ? (
+                  <button
+                    onClick={() => router.push(`/portfolios/${userData?.uid}`)}
+                    className={` group flex w-fit items-center gap-2 rounded-[10px] border border-[color:#8BBFFC] px-[15px] py-[10px] text-[color:#8BBFFC] transition-all hover:border-[color:#4784D9] hover:text-[color:#4784D9] disabled:bg-gray-500`}
+                  >
+                    <Folders className='transition-all ease-in-out group-hover:-translate-y-[1px]' />
+                    My Portfolio
+                  </button>
+                ) : (
+                  <div
+                    className={` flex w-fit cursor-default items-center gap-2 rounded-[10px] border border-orange-500 px-[15px] py-[10px] text-orange-500 transition-all`}
+                  >
+                    <FileWarning />
+                    Add Portfolio URL
+                  </div>
+                )}
+                <button
+                  onClick={() => signOut(auth)}
+                  className={` w-fit rounded-[10px] bg-[color:#FF6961] px-[15px] py-[10px] text-white transition-all hover:bg-[color:#e65f57] disabled:bg-gray-500`}
+                >
+                  Sign Out
+                </button>
+              </div>
+            </section>
+            <section className='border-[color:#BFC5C5]/50 w-full rounded-[10px] border bg-white  px-[20px] py-[31px]'>
+              <div className='flex justify-between gap-2'>
+                <span className=''>
+                  <h2 className='text-[19px]'>Upload Your Portfolio</h2>
+                  <p className='text-gray-500'>
+                    Enter your full portfolio URL below. We&apos;ll take care of
+                    the rest
+                  </p>
+                </span>
+                {edit.portfolio ? (
+                  <button
+                    className='text-[14px] hover:underline'
+                    onClick={() =>
+                      setEdit({
+                        settings: true,
+                        preferences: true,
+                        portfolio: false,
+                      })
+                    }
+                  >
+                    Edit
                   </button>
                 ) : (
                   <button
-                    className='flex w-fit items-center gap-[8px] self-end rounded-[8px] bg-red-400 px-[25px] py-[13px] text-white'
-                    disabled={true}
-                    // onClick={() => handleLinkPortfolio()}
+                    className='text-[14px] hover:underline'
+                    onClick={() => {
+                      setUserData(userTemp);
+                      setEdit({ ...edit, portfolio: !edit.portfolio });
+                    }}
                   >
-                    <AlertCircle />
-                    Portfolio Not Linked
+                    Cancel
                   </button>
                 )}
-              </span>
+              </div>
+
+              <div className='mt-[31px] flex flex-col justify-start gap-[20px] '>
+                <div className='flex gap-5'>
+                  <section className='flex w-full flex-col gap-[4px] text-[14px]'>
+                    <label htmlFor='portfolioURL'>Full Portfolio URL</label>
+                    <input
+                      id='portfolioURL'
+                      value={
+                        userData?.portfolioURL ? userData?.portfolioURL : ''
+                      }
+                      className='rounded-[10px] border border-border px-[15px] py-[11px] text-[12px] text-important disabled:bg-gray-100 disabled:text-unimportant'
+                      placeholder='Example: https://yeahimjt.me'
+                      type='text'
+                      disabled={edit.portfolio ? true : false}
+                      onChange={(e) =>
+                        setUserData((prevData) =>
+                          prevData
+                            ? { ...prevData, portfolioURL: e.target.value }
+                            : null
+                        )
+                      }
+                    />
+                  </section>
+                </div>
+                {!edit.portfolio && (
+                  <div className='flex w-full justify-end'>
+                    <button
+                      className={` w-full rounded-[10px] bg-[color:#8BBFFC] px-[15px] py-[10px] text-white transition-all hover:bg-[color:#4784D9] disabled:bg-gray-500`}
+                      onClick={() => updatePortfolio()}
+                      disabled={loading.portfolio}
+                    >
+                      {loading.portfolio
+                        ? 'Updating Portfolio... (Approx. 1 min)'
+                        : 'Update Portfolio'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </section>
-            <section className='w-full rounded-[8px] border border-border bg-white  px-[20px] py-[31px]'>
+            <section className='border-[color:#BFC5C5]/50 w-full rounded-[10px] border bg-white  px-[20px] py-[31px]'>
               <div className='flex justify-between'>
                 <span className=''>
-                  <h2 className=''>Account Settings</h2>
-                  <p className='text-unimportant'>
+                  <h2 className='text-[19px]'>Account Settings</h2>
+                  <p className='text-gray-500'>
                     Here you can change your account information
                   </p>
                 </span>
                 {edit.settings ? (
                   <button
+                    className='text-[14px] hover:underline'
                     onClick={() =>
-                      setEdit({ ...edit, settings: !edit.settings })
+                      setEdit({
+                        settings: false,
+                        preferences: true,
+                        portfolio: true,
+                      })
                     }
                   >
-                    <Edit2 size={22} className='' />
+                    Edit
                   </button>
                 ) : (
                   <button
+                    className='text-[14px] hover:underline'
                     onClick={() => {
                       setUserData(userTemp);
                       setEdit({ ...edit, settings: !edit.settings });
                     }}
                   >
-                    <X size={22} className='' />
+                    Cancel
                   </button>
                 )}
               </div>
 
-              <div className='mt-[31px] flex flex-col flex-wrap items-end justify-start gap-[20px] second:flex-row'>
-                <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
+              <div className='mt-[31px] flex flex-col justify-start gap-[20px] '>
+                <section className='flex flex-[0.5] flex-col gap-[4px] text-[14px]'>
                   <label htmlFor='email'>Email</label>
                   <input
                     id='email'
                     value={userData ? userData.email : ''}
-                    className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-unimportant'
+                    className='rounded-[10px] border border-border px-[15px] py-[11px] text-[12px] text-unimportant disabled:bg-gray-100'
                     placeholder='Your Email Address'
                     type='email'
                     disabled
@@ -325,94 +308,134 @@ const page = () => {
                     }
                   />
                 </section>
-                <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
-                  <label htmlFor='fullname'>Full Name</label>
-                  <input
-                    id='fullname'
-                    value={userData?.displayName ? userData?.displayName : ''}
-                    className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-important disabled:text-unimportant'
-                    placeholder='Your Full Name'
-                    type='text'
-                    disabled={edit.settings ? true : false}
-                    onChange={(e) =>
-                      setUserData((prevData) =>
-                        prevData
-                          ? { ...prevData, displayName: e.target.value }
-                          : null
-                      )
-                    }
-                  />
-                </section>
-                <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
-                  <label htmlFor='title'>Title</label>
-                  <select
-                    className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-general'
-                    value={userData?.title || ''}
-                    onChange={handleSelectChange}
-                    disabled={edit.settings ? true : false}
-                  >
-                    <option
-                      value=''
-                      className='text-unimportant'
-                      disabled
-                      hidden
-                    ></option>
-                    <option value='swe' className='text-unimportant'>
-                      Software Engineer
-                    </option>
-                    <option value='fe' className='text-unimportant'>
-                      Front End Developer
-                    </option>
-                    <option value='be' className='text-unimportant'>
-                      Back End Developer
-                    </option>
-                    <option value='ui' className='text-unimportant'>
-                      UI/UX Designer
-                    </option>
-                    <option value='pd' className='text-unimportant'>
-                      Product Designer
-                    </option>
-                  </select>
-                </section>
-                <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
-                  <label htmlFor='portfoliourl'>Portfolio URL</label>
-                  <input
-                    id='portfoliourl'
-                    value={userData?.portfolioURL ? userData?.portfolioURL : ''}
-                    className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-important disabled:text-unimportant'
-                    placeholder='Your Portolio URL'
-                    type='text'
-                    autoFocus={highlight}
-                    disabled={edit.settings ? true : false}
-                    onChange={(e) =>
-                      setUserData((prevData) =>
-                        prevData
-                          ? { ...prevData, portfolioURL: e.target.value }
-                          : null
-                      )
-                    }
-                  />
-                </section>
-                <section className='flex min-w-[608px] flex-[0.5] flex-col gap-[4px]'>
+
+                <div className='flex gap-5'>
+                  <section className='flex  flex-[0.5] flex-col gap-[4px] text-[14px]'>
+                    <label htmlFor='firstname'>First Name</label>
+                    <input
+                      id='firstname'
+                      value={userData?.firstName ? userData?.firstName : ''}
+                      className='rounded-[10px] border border-border px-[15px] py-[11px] text-[12px] text-important disabled:bg-gray-100 disabled:text-unimportant'
+                      placeholder='Your First Name'
+                      type='text'
+                      disabled={edit.settings ? true : false}
+                      onChange={(e) =>
+                        setUserData((prevData) =>
+                          prevData
+                            ? { ...prevData, firstName: e.target.value }
+                            : null
+                        )
+                      }
+                    />
+                  </section>
+
+                  <section className='flex flex-[0.5] flex-col gap-[4px] text-[14px]'>
+                    <label htmlFor='fullname'>Last Name</label>
+                    <input
+                      id='lastname'
+                      value={userData?.lastName ? userData?.lastName : ''}
+                      className='rounded-[10px] border border-border px-[15px] py-[11px] text-[12px] text-important disabled:bg-gray-100 disabled:text-unimportant'
+                      placeholder='Your Last Name'
+                      type='text'
+                      disabled={edit.settings ? true : false}
+                      onChange={(e) =>
+                        setUserData((prevData) =>
+                          prevData
+                            ? { ...prevData, lastName: e.target.value }
+                            : null
+                        )
+                      }
+                    />
+                  </section>
+                </div>
+                {/* <section className='flex flex-[0.5] flex-col gap-[4px]  text-[14px]'> */}
+                {/*   <label htmlFor='title'>Status</label> */}
+                {/*   <select */}
+                {/*     className='rounded-[10px] border border-border px-[15px] py-[11px] text-[12px] text-general disabled:bg-gray-100' */}
+                {/*     value={userData?.title || ''} */}
+                {/*     onChange={handleSelectChange} */}
+                {/*     disabled={edit.settings ? true : false} */}
+                {/*   > */}
+                {/*     <option */}
+                {/*       value='' */}
+                {/*       className='text-unimportant' */}
+                {/*       disabled */}
+                {/*       hidden */}
+                {/*     ></option> */}
+                {/*     <option value='swe' className='text-unimportant'> */}
+                {/*       Available for Work */}
+                {/*     </option> */}
+                {/*     <option value='fe' className='text-unimportant'> */}
+                {/*       Busy with Projects */}
+                {/*     </option> */}
+                {/*     <option value='be' className='text-unimportant'> */}
+                {/*       Open to Collaborations */}
+                {/*     </option> */}
+                {/*     <option value='ui' className='text-unimportant'> */}
+                {/*       Taking a Break */}
+                {/*     </option> */}
+                {/*     <option value='pd' className='text-unimportant'> */}
+                {/*       Networking Mode */}
+                {/*     </option> */}
+                {/*     <option value='pd' className='text-unimportant'> */}
+                {/*       Seeking Feedback */}
+                {/*     </option> */}
+                {/*   </select> */}
+                {/* </section> */}
+                {/**/}
+                {/* <section className='flex flex-[0.5] flex-col gap-[4px] text-[14px]'> */}
+                {/*   <label htmlFor='title'>Title</label> */}
+                {/*   <select */}
+                {/*     className='rounded-[10px] border border-border px-[15px] py-[11px] text-[12px] text-general disabled:bg-gray-100' */}
+                {/*     value={userData?.title || ''} */}
+                {/*     onChange={handleSelectChange} */}
+                {/*     disabled={edit.settings ? true : false} */}
+                {/*   > */}
+                {/*     <option */}
+                {/*       value='' */}
+                {/*       className='text-unimportant' */}
+                {/*       disabled */}
+                {/*       hidden */}
+                {/*     ></option> */}
+                {/*     <option value='swe' className='text-unimportant'> */}
+                {/*       Software Engineer */}
+                {/*     </option> */}
+                {/*     <option value='fe' className='text-unimportant'> */}
+                {/*       Front End Developer */}
+                {/*     </option> */}
+                {/*     <option value='be' className='text-unimportant'> */}
+                {/*       Back End Developer */}
+                {/*     </option> */}
+                {/*     <option value='ui' className='text-unimportant'> */}
+                {/*       UI/UX Designer */}
+                {/*     </option> */}
+                {/*     <option value='pd' className='text-unimportant'> */}
+                {/*       Product Designer */}
+                {/*     </option> */}
+                {/*   </select> */}
+                {/* </section> */}
+                <section className='flex  flex-[0.5] flex-col gap-[4px]'>
                   <label className='select-none' htmlFor=''>
                     Profile Picture
                   </label>
                   {profilePicture && !edit.settings && (
-                    <Image
-                      className='my-[6px] rounded-full'
-                      src={
-                        (profilePicture &&
-                          URL.createObjectURL(profilePicture)) ||
-                        ''
-                      }
-                      width={50}
-                      height={50}
-                      alt=''
-                    />
+                    <div className='relative my-6  h-[100px] w-[100px]'>
+                      <Image
+                        className='absolute  h-full rounded-full object-cover'
+                        src={
+                          (profilePicture &&
+                            URL.createObjectURL(profilePicture)) ||
+                          ''
+                        }
+                        width={100}
+                        height={100}
+                        alt=''
+                      />
+                    </div>
                   )}
                   <input
                     type='file'
-                    className='rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-general placeholder:text-unimportant'
+                    className='flex gap-2 rounded-[8px] border border-border px-[15px] py-[11px] text-[12px] text-general placeholder:text-unimportant disabled:bg-gray-100 disabled:text-unimportant'
                     placeholder='Upload Your Profile Picture'
                     disabled={edit.settings ? true : false}
                     onChange={handlePictureUpload}
@@ -421,7 +444,7 @@ const page = () => {
                 {!edit.settings && (
                   <div className='flex w-full justify-end'>
                     <button
-                      className='relative right-0 flex justify-self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
+                      className={` w-full rounded-[10px] bg-[color:#8BBFFC] px-[15px] py-[10px] text-white transition-all hover:bg-[color:#4784D9] disabled:bg-gray-500`}
                       onClick={() => updateSettings()}
                       disabled={loading.settings}
                     >
@@ -431,77 +454,6 @@ const page = () => {
                     </button>
                   </div>
                 )}
-              </div>
-            </section>
-            <section className='w-full rounded-[8px] border border-border bg-white  px-[20px] py-[31px]'>
-              <div className='flex justify-between'>
-                <span>
-                  <h2 className=''>Account Preferences</h2>
-                  <p className='text-unimportant'>
-                    Here you can change your account preferences
-                  </p>
-                </span>
-                {edit.preferences ? (
-                  <button
-                    onClick={() =>
-                      setEdit({ ...edit, preferences: !edit.preferences })
-                    }
-                  >
-                    <Edit2 size={22} className='' />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setEdit({ ...edit, preferences: !edit.preferences });
-                      setUserData(userTemp);
-                    }}
-                  >
-                    <X size={22} className='' />
-                  </button>
-                )}
-              </div>
-              <div className='mt-[31px] flex flex-col justify-between gap-[20px]'>
-                <section className='flex justify-between'>
-                  <label className='select-none' htmlFor='emailpref'>
-                    Allow others to email you
-                  </label>
-                  <input
-                    type='checkbox'
-                    id='emailpref'
-                    checked={userData ? userData.emailVisible : false}
-                    disabled={edit.preferences}
-                    onChange={(e) =>
-                      setUserData((prevData) =>
-                        prevData
-                          ? {
-                              ...prevData,
-                              emailVisible: !prevData.emailVisible,
-                            }
-                          : null
-                      )
-                    }
-                  />
-                </section>
-              </div>
-            </section>
-            <section className='w-full rounded-[8px] border border-border bg-white  px-[20px] py-[31px]'>
-              <div className='flex justify-between'>
-                <span>
-                  <h2 className=''>Change Password</h2>
-                  <p className='text-unimportant'>
-                    Here you can change your password
-                  </p>
-                </span>
-                <button
-                  className='w-fit self-end rounded-[8px] bg-cta px-[25px] py-[13px] text-white'
-                  onClick={() => {
-                    user.email
-                      ? sendPasswordResetEmail(auth, user.email)
-                      : null;
-                  }}
-                >
-                  Request Password Reset
-                </button>
               </div>
             </section>
           </section>
