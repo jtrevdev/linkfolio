@@ -23,6 +23,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [require('daisyui')],
+  daisyui: {
+    logs: false
+  }
 };
 export default config;
