@@ -4,10 +4,12 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import Profile from './profile';
 import Loading from './loading';
+import { Eye, Heart } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 type PreviewProps = {
   redirect: string;
-  image: string;
+  image: string[];
   owner_displayName: string;
   owner_title: string;
   owner_photoURL: string;
@@ -25,26 +27,59 @@ const Preview = ({
     setLoaded(true);
   }
   return (
-    <>
+    <motion.div
+      initial={{ y: 10, opacity: 0.7 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ ease: 'easeInOut' }}
+    >
       <Link
         href={`/portfolios/${redirect}`}
-        className={`flex flex-col justify-between rounded-[20px]  border border-border bg-white transition-all duration-500 hover:shadow-md second:min-h-[390px] ${loaded ? 'rotate-0 scale-100' : 'rotate-6 scale-90'}`}
+        className={`flex flex-col justify-between  transition-all duration-500 `}
       >
-        <Image
-          onLoad={handleLoaded}
-          className={`delay-50 w-full rounded-[8px] border-b border-border object-cover p-[17px]  transition-opacity ${loaded ? 'opacity-100' : 'opacity-0'}`}
-          src={image}
-          width={379}
-          height={210}
-          alt=''
-        />
-        <Profile
-          photoURL={owner_photoURL}
-          displayName={owner_displayName}
-          title={owner_title}
-        />
+        {image ? (
+          <div className='relative aspect-video'>
+            <Image
+              onLoad={handleLoaded}
+              className={`delay-50 border-[color:#BFC5C5]/50 w-full rounded-[8px] border object-cover  transition-opacity`}
+              src={image[0]}
+              fill
+              alt=''
+              draggable={false}
+            />
+          </div>
+        ) : (
+          ''
+        )}
       </Link>
-    </>
+      <span className='mt-[8px] flex items-center justify-between'>
+        <div className='flex items-center gap-[5px]'>
+          <div className='relative h-[35px] w-[35px]'>
+            <Image
+              className='absolute h-full rounded-full object-cover'
+              src={`${owner_photoURL ? owner_photoURL : '/images/default.png'}`}
+              width={35}
+              height={35}
+              alt={owner_displayName}
+            />
+          </div>
+          <p className='text-[12px]'>{owner_displayName}</p>
+        </div>
+        {/* <div className='flex gap-5'> */}
+        {/*   <span> */}
+        {/*     <button className='flex cursor-pointer items-center gap-[5px]'> */}
+        {/*       <Heart className='text-red-500' size={14} fill={'red'} /> */}
+        {/*       <p className='text-[14px]'>3</p> */}
+        {/*     </button> */}
+        {/*   </span> */}
+        {/*   <span> */}
+        {/*     <div className='flex cursor-pointer items-center gap-[5px]'> */}
+        {/*       <Eye size={14} /> */}
+        {/*       <p className='text-[14px]'>3</p> */}
+        {/*     </div> */}
+        {/*   </span> */}
+        {/* </div> */}
+      </span>
+    </motion.div>
   );
 };
 
