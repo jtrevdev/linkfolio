@@ -1,6 +1,5 @@
 'use client';
 import { auth, firestore } from '@/app/firebase/config';
-import { convertTitle } from '@/app/helper/conversion';
 import { UserData } from '@/types';
 import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
@@ -32,6 +31,9 @@ const Profile = ({ photoURL, displayName, title }: ProfileProps) => {
           setup: userSnapshot.data().setup,
           title: userSnapshot.data().title,
           uid: userSnapshot.data().uid,
+          firstName: userSnapshot.data().displayName.split(' ')[0],
+          lastName: userSnapshot.data().displayName.split(' ')[1],
+          status: userSnapshot.data().status,
         });
       }
     }
@@ -41,20 +43,19 @@ const Profile = ({ photoURL, displayName, title }: ProfileProps) => {
     }
   }, [user]);
   return (
-    <section className='flex items-end gap-[10px] px-[17px] py-[23px]'>
-      <Image
-        className='rounded-full'
-        src={photoURL || '/images/default.png'}
-        width={68}
-        height={68}
-        alt=''
-      />
+    <section className='flex w-fit items-center gap-[10px]'>
+      <div className='group relative h-[70px] w-[70px]'>
+        <Image
+          className='absolute h-full rounded-full object-cover'
+          src={photoURL || '/images/default.png'}
+          width={70}
+          height={70}
+          alt=''
+        />
+      </div>
       <section className='pb-[7px]'>
         <p className='font-semibold text-important'>
           {displayName ? displayName : 'Anonymous'}
-        </p>
-        <p className={`font-light text-general `}>
-          {title ? convertTitle(title) : 'No Title Declared'}
         </p>
       </section>
     </section>
