@@ -49,14 +49,16 @@ const page = () => {
   }, [timer]);
 
   function handleClick() {
-    // TODO: Call send magiclink again
-    setLoading(true);
-    if (window && window.localStorage.getItem('emailForSignIn')) {
-      sendMagicLink(window.localStorage.getItem('emailForSignIn')!);
+    if (window) {
+      // TODO: Call send magiclink again
+      setLoading(true);
+      if (window.localStorage.getItem('emailForSignIn')) {
+        sendMagicLink(window.localStorage.getItem('emailForSignIn')!);
+      }
+      const currentTime = new Date().getTime();
+      window.localStorage.setItem('lastButtonClickedTime', String(currentTime));
+      setLoading(false);
     }
-    const currentTime = new Date().getTime();
-    window.localStorage.setItem('lastButtonClickedTime', String(currentTime));
-    setLoading(false);
   }
   return (
     <>
@@ -90,39 +92,41 @@ const page = () => {
             </div>
           </h1>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, display: 'none' }}
-          animate={{ opacity: 1, display: 'block' }}
-          transition={{ delay: 2.5, duration: 0.5 }}
-          className='absolute mx-auto h-[28px] w-[490px] space-y-[21px]'
-        >
-          <h1 className='flex items-center gap-2 text-[19px] font-semibold'>
-            Verification Sent <BadgeCheck className='text-[color:#6DAFFE]' />
-          </h1>
-          <div className='space-y-[10px]'>
-            <p>
-              A link has been sent to{' '}
-              <span className='font-medium'>
-                {window && window.localStorage.getItem('emailForSignIn')}
-              </span>{' '}
-              to sign you in.
-            </p>
-            <p className='text-[14px] font-extralight italic'>
-              Please check your spam folder as well.
-            </p>
-          </div>
-          <button
-            className='flex w-full justify-center gap-2 rounded-[10px] bg-[color:#6DAFFE] py-[5px] text-white transition-all hover:bg-[color:#4784D9] disabled:bg-gray-500'
-            disabled={timer && timer > 0 ? true : false}
-            onClick={() => {
-              setLoading(true);
-              handleClick();
-            }}
+        {window && (
+          <motion.div
+            initial={{ opacity: 0, display: 'none' }}
+            animate={{ opacity: 1, display: 'block' }}
+            transition={{ delay: 2.5, duration: 0.5 }}
+            className='absolute mx-auto h-[28px] w-[490px] space-y-[21px]'
           >
-            {loading ? 'Resending Verification...' : 'Resend Verification'}
-            <p>{timer && timer > 0 ? `(Try again in ${timer}s)` : ''}</p>
-          </button>
-        </motion.div>
+            <h1 className='flex items-center gap-2 text-[19px] font-semibold'>
+              Verification Sent <BadgeCheck className='text-[color:#6DAFFE]' />
+            </h1>
+            <div className='space-y-[10px]'>
+              <p>
+                A link has been sent to{' '}
+                <span className='font-medium'>
+                  {window.localStorage.getItem('emailForSignIn')}
+                </span>{' '}
+                to sign you in.
+              </p>
+              <p className='text-[14px] font-extralight italic'>
+                Please check your spam folder as well.
+              </p>
+            </div>
+            <button
+              className='flex w-full justify-center gap-2 rounded-[10px] bg-[color:#6DAFFE] py-[5px] text-white transition-all hover:bg-[color:#4784D9] disabled:bg-gray-500'
+              disabled={timer && timer > 0 ? true : false}
+              onClick={() => {
+                setLoading(true);
+                handleClick();
+              }}
+            >
+              {loading ? 'Resending Verification...' : 'Resend Verification'}
+              <p>{timer && timer > 0 ? `(Try again in ${timer}s)` : ''}</p>
+            </button>
+          </motion.div>
+        )}
       </div>
     </>
   );
