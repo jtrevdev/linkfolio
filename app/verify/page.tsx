@@ -15,14 +15,13 @@ const page = () => {
 
   useEffect(() => {
     if (
-      typeof window !== 'undefined' &&
-      window.localStorage &&
-      !window.localStorage.getItem('emailForSignIn')
+      global?.window.localStorage &&
+      !global?.window.localStorage.getItem('emailForSignIn')
     ) {
       router.push('/');
     }
     const intervalId = setInterval(() => {
-      const lastClickedTime = window.localStorage.getItem(
+      const lastClickedTime = global?.window.localStorage.getItem(
         'lastButtonClickedTime'
       );
       if (lastClickedTime) {
@@ -43,13 +42,13 @@ const page = () => {
   }, []); // Empty dependency array to run effect only once
 
   useEffect(() => {
-    if (timer === 0 && window) {
+    if (timer === 0 && global?.window) {
       window.localStorage.removeItem('lastButtonClickedTime');
     }
   }, [timer]);
 
   function handleClick() {
-    if (window) {
+    if (global?.window) {
       // TODO: Call send magiclink again
       setLoading(true);
       if (window.localStorage.getItem('emailForSignIn')) {
@@ -92,7 +91,7 @@ const page = () => {
             </div>
           </h1>
         </motion.div>
-        {window && (
+        {global?.window && (
           <motion.div
             initial={{ opacity: 0, display: 'none' }}
             animate={{ opacity: 1, display: 'block' }}
