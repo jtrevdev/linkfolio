@@ -17,12 +17,14 @@ const page = () => {
     if (
       typeof window !== 'undefined' &&
       window.localStorage &&
-      !localStorage.getItem('emailForSignIn')
+      !window.localStorage.getItem('emailForSignIn')
     ) {
       router.push('/');
     }
     const intervalId = setInterval(() => {
-      const lastClickedTime = localStorage.getItem('lastButtonClickedTime');
+      const lastClickedTime = window.localStorage.getItem(
+        'lastButtonClickedTime'
+      );
       if (lastClickedTime) {
         const currentTime = new Date().getTime();
         const elapsedTimeInSeconds = Math.floor(
@@ -42,18 +44,18 @@ const page = () => {
 
   useEffect(() => {
     if (timer === 0) {
-      localStorage.removeItem('lastButtonClickedTime');
+      window.localStorage.removeItem('lastButtonClickedTime');
     }
   }, [timer]);
 
   function handleClick() {
     // TODO: Call send magiclink again
     setLoading(true);
-    if (localStorage.getItem('emailForSignIn')) {
-      sendMagicLink(localStorage.getItem('emailForSignIn')!);
+    if (window.localStorage.getItem('emailForSignIn')) {
+      sendMagicLink(window.localStorage.getItem('emailForSignIn')!);
     }
     const currentTime = new Date().getTime();
-    localStorage.setItem('lastButtonClickedTime', String(currentTime));
+    window.localStorage.setItem('lastButtonClickedTime', String(currentTime));
     setLoading(false);
   }
   return (
@@ -101,7 +103,7 @@ const page = () => {
             <p>
               A link has been sent to{' '}
               <span className='font-medium'>
-                {localStorage.getItem('emailForSignIn')}
+                {window.localStorage.getItem('emailForSignIn')}
               </span>{' '}
               to sign you in.
             </p>
