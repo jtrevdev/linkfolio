@@ -43,7 +43,7 @@ const page = () => {
   }, []); // Empty dependency array to run effect only once
 
   useEffect(() => {
-    if (timer === 0) {
+    if (timer === 0 && window) {
       window.localStorage.removeItem('lastButtonClickedTime');
     }
   }, [timer]);
@@ -51,7 +51,7 @@ const page = () => {
   function handleClick() {
     // TODO: Call send magiclink again
     setLoading(true);
-    if (window.localStorage.getItem('emailForSignIn')) {
+    if (window && window.localStorage.getItem('emailForSignIn')) {
       sendMagicLink(window.localStorage.getItem('emailForSignIn')!);
     }
     const currentTime = new Date().getTime();
@@ -103,7 +103,7 @@ const page = () => {
             <p>
               A link has been sent to{' '}
               <span className='font-medium'>
-                {window.localStorage.getItem('emailForSignIn')}
+                {window && window.localStorage.getItem('emailForSignIn')}
               </span>{' '}
               to sign you in.
             </p>
