@@ -14,7 +14,11 @@ const page = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (!localStorage.getItem('emailForSignIn')) {
+    if (
+      typeof window !== 'undefined' &&
+      window.localStorage &&
+      !localStorage.getItem('emailForSignIn')
+    ) {
       router.push('/');
     }
     const intervalId = setInterval(() => {
